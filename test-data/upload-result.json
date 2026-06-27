@@ -1,0 +1,77 @@
+{
+  "transactions": [
+    {
+      "referencia": "PSOATLbnUbLhl0_",
+      "documento": "19396984",
+      "placa": "RFX821",
+      "nombre": "MAURICIO FRANCO RODRIGUEZ",
+      "email": "francomauro2002@yahoo.com",
+      "fecha": "26-06-2026 16:09",
+      "monto": 677400,
+      "metodoPago": "PSE",
+      "estado": "APROBADO",
+      "detalleEstado": "00-Aprobada",
+      "downloadStatus": "confirmation"
+    },
+    {
+      "referencia": "PSOATzvStXuui4Y",
+      "documento": "51804743",
+      "placa": "EMR162",
+      "nombre": "LUZ STELLA BELLO ZAMORA",
+      "email": "stellabz@yahoo.com",
+      "fecha": "26-06-2026 16:06",
+      "monto": 544700,
+      "metodoPago": "TARJETA",
+      "estado": "APROBADO",
+      "detalleEstado": "Aprobada",
+      "downloadStatus": "confirmation"
+    },
+    {
+      "referencia": "PSOATN9L8cIWBki",
+      "documento": "21061135",
+      "placa": "DQL183",
+      "nombre": "MERY PARDO HERNANDEZ",
+      "email": "psochamanrique@hotmail.com",
+      "fecha": "26-06-2026 12:39",
+      "monto": 946600,
+      "metodoPago": "PSE",
+      "estado": "RECHAZADO",
+      "detalleEstado": "El usuario no finalizo",
+      "downloadStatus": "pending"
+    },
+    {
+      "referencia": "PSOATwf8Nv6fqNL",
+      "documento": "19120454",
+      "placa": "IWS373",
+      "nombre": "JAIME ALVARADO BESTENE",
+      "email": "consultorio710@yahoo.com",
+      "fecha": "26-06-2026 08:17",
+      "monto": 1121400,
+      "metodoPago": "PSE",
+      "estado": "APROBADO",
+      "detalleEstado": "Aprobada",
+      "downloadStatus": "confirmation"
+    },
+    {
+      "referencia": "PSOATkUHohUIVc8",
+      "documento": "80181666",
+      "placa": "CYW179",
+      "nombre": "EDWIN JAVIER HERNANDEZ MONTAÑEZ",
+      "email": "edwinjhm2681@gmail.com",
+      "fecha": "25-06-2026 21:54",
+      "monto": 677400,
+      "metodoPago": "TARJETA",
+      "estado": "APROBADO",
+      "detalleEstado": "Aprobada",
+      "downloadStatus": "pending"
+    }
+  ],
+  "summary": {
+    "total": 5,
+    "aprobados": 4,
+    "rechazados": 1,
+    "expirados": 0,
+    "downloaded": 0,
+    "pending": 1
+  }
+}

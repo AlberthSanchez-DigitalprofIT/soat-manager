@@ -72,4 +72,13 @@ server.listen(PORT, () => {
   console.log(`SOAT Manager Backend corriendo en http://localhost:${PORT}`);
   console.log(`WebSocket disponible en ws://localhost:${PORT}/ws`);
   console.log(`PDFs se guardan en: ${pdfsDir}`);
+
+  // Keep-alive: ping propio cada 5 min para evitar que Railway duerma el servicio
+  if (process.env.RAILWAY_PUBLIC_DOMAIN) {
+    const keepAliveUrl = `https://${process.env.RAILWAY_PUBLIC_DOMAIN}/api/health`;
+    setInterval(() => {
+      fetch(keepAliveUrl).catch(() => {});
+    }, 5 * 60 * 1000);
+    console.log(`Keep-alive activado: ping a ${keepAliveUrl} cada 5 min`);
+  }
 });
