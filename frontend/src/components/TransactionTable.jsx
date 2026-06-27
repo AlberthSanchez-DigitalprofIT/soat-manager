@@ -59,6 +59,7 @@ function TransactionTable({ transactions, onDownloadSingle, isDownloading }) {
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Documento</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Referencia</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Confirmación</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Monto</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado Pago</th>
@@ -77,6 +78,16 @@ function TransactionTable({ transactions, onDownloadSingle, isDownloading }) {
                   <td className="px-4 py-3 text-sm">{t.documento}</td>
                   <td className="px-4 py-3 text-sm truncate max-w-[200px]" title={t.nombre}>{t.nombre}</td>
                   <td className="px-4 py-3 text-sm font-mono text-xs text-gray-500 truncate max-w-[150px]" title={t.referencia}>{t.referencia}</td>
+                  <td className="px-4 py-3 text-sm">
+                    <a
+                      href={`https://www.proyectivaseguros.com/venta-soat/confirmacion?p=${t.referencia}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 underline text-xs"
+                    >
+                      Ver confirmación
+                    </a>
+                  </td>
                   <td className="px-4 py-3 text-sm text-gray-500">{t.fecha}</td>
                   <td className="px-4 py-3 text-sm">${Number(t.monto).toLocaleString('es-CO')}</td>
                   <td className="px-4 py-3">
