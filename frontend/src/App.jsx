@@ -47,12 +47,13 @@ function App() {
   // Filtrado por fecha
   function parseDate(dateStr) {
     if (!dateStr) return null;
-    // Formato del Excel: "26-06-2026 16:09" o "2026-06-26" (del input date)
+    // Formato del Excel: "26-06-2026 16:09"
     const parts = dateStr.match(/(\d{2})-(\d{2})-(\d{4})/);
     if (parts) {
-      return new Date(parts[3], parts[2] - 1, parts[1]);
+      // Retorna string YYYY-MM-DD para comparar sin problemas de timezone
+      return `${parts[3]}-${parts[2]}-${parts[1]}`;
     }
-    return new Date(dateStr);
+    return dateStr;
   }
 
   const filteredTransactions = transactions.filter((t) => {
@@ -63,20 +64,13 @@ function App() {
       if (statusFilter === 'expirada' && t.estado !== 'EXPIRADA') return false;
     }
 
-    // Filtro por fecha
+    // Filtro por fecha (comparación de strings YYYY-MM-DD)
     if (dateFrom || dateTo) {
-      const txDate = parseDate(t.fecha);
-      if (!txDate) return true;
+      const txDateStr = parseDate(t.fecha);
+      if (!txDateStr) return true;
 
-      if (dateFrom) {
-        const from = new Date(dateFrom);
-        if (txDate < from) return false;
-      }
-      if (dateTo) {
-        const to = new Date(dateTo);
-        to.setHours(23, 59, 59);
-        if (txDate > to) return false;
-      }
+      if (dateFrom && txDateStr < dateFrom) return false;
+      if (dateTo && txDateStr > dateTo) return false;
     }
 
     return true;
