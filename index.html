@@ -69,6 +69,8 @@
     <div class="header">
         <h1>Reporte de Ventas AXA — SOAT Digital (Proyectiva)</h1>
         <p id="headerSubtitle">Carga el archivo Excel de ePayco para generar el informe automáticamente</p>
+        <input type="file" id="reloadFileInput" accept=".xlsx,.xls" style="display:none;">
+        <button id="btnReload" style="display:none;margin-top:0.8rem;background:#3b82f6;color:white;border:none;padding:0.5rem 1.2rem;border-radius:8px;cursor:pointer;font-size:0.9rem;font-weight:600;" onclick="document.getElementById('reloadFileInput').click()">Cargar nuevo archivo</button>
     </div>
     <div class="container">
         <div class="upload-zone" id="uploadZone">
@@ -94,15 +96,10 @@ const STORAGE_DATE_KEY = 'soat_dashboard_date';
     if (saved) {
         try {
             var rawData = JSON.parse(saved);
-            document.getElementById('headerSubtitle').innerHTML = 'Ultima actualizacion: <strong>' + savedDate + '</strong> | Arrastra un nuevo Excel para actualizar';
-            document.getElementById('uploadZone').innerHTML = '<h3>Datos cargados (' + savedDate + ')</h3><p>Para actualizar, arrastra un nuevo archivo Excel aqui</p><input type="file" id="fileInput" accept=".xlsx,.xls"><button class="btn" onclick="document.getElementById(\'fileInput\').click()">Cargar nuevo archivo</button>';
-            document.getElementById('uploadZone').style.borderColor = '#059669';
-            document.getElementById('uploadZone').style.background = '#f0fdf4';
-            // Re-attach event listener
-            setTimeout(function() {
-                var fi = document.getElementById('fileInput');
-                if (fi) fi.addEventListener('change', function(e) { handleFile(e.target.files[0]); });
-            }, 100);
+            document.getElementById('headerSubtitle').innerHTML = 'Ultima actualizacion: <strong>' + savedDate + '</strong>';
+            document.getElementById('btnReload').style.display = 'inline-block';
+            document.getElementById('reloadFileInput').addEventListener('change', function(e) { handleFile(e.target.files[0]); });
+            document.getElementById('uploadZone').style.display = 'none';
             processData(rawData);
         } catch(e) { console.error('Error cargando datos guardados:', e); }
     }
