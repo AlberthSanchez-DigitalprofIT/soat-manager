@@ -4,861 +4,199 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reporte de Ventas AXA — SOAT Digital</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f5f7fa; color: #1a1a2e; line-height: 1.6; font-size: 15px; }
-        .header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: white; padding: 2rem; text-align: center; }
-        .header h1 { font-size: 1.8rem; margin-bottom: 0.5rem; }
-        .header p { opacity: 0.8; font-size: 0.95rem; }
-        .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
-        .upload-zone { background: white; border: 2px dashed #cbd5e1; border-radius: 12px; padding: 3rem; text-align: center; margin-bottom: 2rem; transition: all 0.3s; cursor: pointer; }
-        .upload-zone:hover { border-color: #3b82f6; background: #f8fafc; }
-        .upload-zone.dragover { border-color: #3b82f6; background: #eff6ff; }
-        .upload-zone h3 { color: #475569; margin-bottom: 0.5rem; }
-        .upload-zone p { color: #94a3b8; font-size: 0.9rem; }
-        .upload-zone input { display: none; }
-        .btn { background: #3b82f6; color: white; border: none; padding: 0.7rem 1.5rem; border-radius: 8px; cursor: pointer; font-size: 0.95rem; margin-top: 1rem; }
-        .btn:hover { background: #2563eb; }
-        .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
-        .metric-card { background: white; border-radius: 8px; padding: 1.2rem 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border-top: 4px solid #e2e8f0; }
-        .metric-card .value { font-size: 2.2rem; font-weight: 700; color: #1a1a2e; }
-        .metric-card .label { font-size: 0.95rem; color: #64748b; margin-top: 0.3rem; }
-        .metric-card.success { border-top-color: #059669; }
-        .metric-card.success .value { color: #059669; }
-        .metric-card.danger { border-top-color: #dc2626; }
-        .metric-card.danger .value { color: #dc2626; }
-        .metric-card.info { border-top-color: #2563eb; }
-        .metric-card.info .value { color: #2563eb; }
-        .section { background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .section h2 { font-size: 1.3rem; color: #1e293b; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid #e2e8f0; }
-        .section h3 { font-size: 1.1rem; color: #475569; margin: 1rem 0 0.5rem; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
-        th { background: #f8fafc; color: #475569; text-align: left; padding: 0.75rem; border-bottom: 2px solid #e2e8f0; font-weight: 600; }
-        td { padding: 0.7rem 0.75rem; border-bottom: 1px solid #f1f5f9; }
-        tr:hover { background: #f8fafc; }
-        .badge { display: inline-block; padding: 0.25rem 0.7rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600; }
-        .badge-success { background: #d1fae5; color: #065f46; }
-        .badge-danger { background: #fee2e2; color: #991b1b; }
-        .badge-warning { background: #fef3c7; color: #92400e; }
-        .badge-pse { background: #dbeafe; color: #1e40af; }
-        .badge-card { background: #fae8ff; color: #86198f; }
-        .badge-daviplata { background: #fef9c3; color: #854d0e; }
-        .charts-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin-bottom: 1.5rem; }
-        .chart-container { background: white; border-radius: 8px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid #e8ecf0; }
-        .chart-container h3 { font-size: 1.05rem; color: #1e293b; margin-bottom: 1rem; font-weight: 600; }
-        .fase-tag { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight: 600; }
-        .fase-af { background: #e0e7ff; color: #3730a3; }
-        .fase-mb { background: #d1fae5; color: #065f46; }
-        .obs-list { list-style: none; padding: 0; }
-        .obs-list li { padding: 0.7rem; margin-bottom: 0.5rem; background: #fffbeb; border-left: 3px solid #f59e0b; border-radius: 0 8px 8px 0; font-size: 0.95rem; }
-        @media (max-width: 768px) { .metrics-grid { grid-template-columns: repeat(2, 1fr); } .charts-grid { grid-template-columns: 1fr; } }
-        .print-btn { position: fixed; bottom: 2rem; right: 2rem; background: #1a1a2e; color: white; border: none; padding: 0.8rem 1.2rem; border-radius: 50px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3); font-size: 0.9rem; z-index: 100; }
-        .print-btn:hover { background: #16213e; }
-        .btn-download { display: inline-flex; align-items: center; gap: 0.4rem; background: #059669; color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; font-size: 0.95rem; font-weight: 600; margin-bottom: 1rem; transition: background 0.2s; }
-        .btn-download:hover { background: #047857; }
-        .btn-download svg { width: 16px; height: 16px; }
-        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid #e2e8f0; }
-        .section-header h2 { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
-        @media print { .upload-zone, .print-btn, .btn-download { display: none !important; } .header { padding: 1rem; } body { background: white; } .section, .metric-card, .chart-container { box-shadow: none; border: 1px solid #e2e8f0; } }
-</style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Segoe UI',system-ui,sans-serif;background:#f5f7fa;color:#1a1a2e;line-height:1.6;font-size:15px}
+        .header{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);color:#fff;padding:2rem;text-align:center}
+        .header h1{font-size:1.8rem;margin-bottom:.5rem}
+        .header p{opacity:.8;font-size:.95rem}
+        .header a{color:#93c5fd}
+        .container{max-width:1400px;margin:0 auto;padding:2rem}
+        .metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem}
+        .metric-card{background:#fff;border-radius:8px;padding:1.2rem 1.5rem;box-shadow:0 1px 3px rgba(0,0,0,.08);border-top:4px solid #e2e8f0}
+        .metric-card .value{font-size:2.2rem;font-weight:700;color:#1a1a2e}
+        .metric-card .label{font-size:.95rem;color:#64748b;margin-top:.3rem}
+        .metric-card.success{border-top-color:#059669}.metric-card.success .value{color:#059669}
+        .metric-card.danger{border-top-color:#dc2626}.metric-card.danger .value{color:#dc2626}
+        .metric-card.info{border-top-color:#2563eb}.metric-card.info .value{color:#2563eb}
+        .section{background:#fff;border-radius:12px;padding:1.5rem;margin-bottom:1.5rem;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+        .section h2{font-size:1.3rem;color:#1e293b;margin-bottom:1rem;padding-bottom:.5rem;border-bottom:2px solid #e2e8f0}
+        .section h3{font-size:1.1rem;color:#475569;margin:1rem 0 .5rem}
+        table{width:100%;border-collapse:collapse;font-size:.95rem}
+        th{background:#f8fafc;color:#475569;text-align:left;padding:.75rem;border-bottom:2px solid #e2e8f0;font-weight:600}
+        td{padding:.7rem .75rem;border-bottom:1px solid #f1f5f9}
+        tr:hover{background:#f8fafc}
+        .badge{display:inline-block;padding:.25rem .7rem;border-radius:20px;font-size:.85rem;font-weight:600}
+        .badge-success{background:#d1fae5;color:#065f46}
+        .badge-danger{background:#fee2e2;color:#991b1b}
+        .badge-warning{background:#fef3c7;color:#92400e}
+        .badge-pse{background:#dbeafe;color:#1e40af}
+        .badge-card{background:#fae8ff;color:#86198f}
+        .badge-daviplata{background:#fef9c3;color:#854d0e}
+        .charts-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1.5rem;margin-bottom:1.5rem}
+        .chart-container{background:#fff;border-radius:8px;padding:1.5rem;box-shadow:0 1px 3px rgba(0,0,0,.08);border:1px solid #e8ecf0}
+        .chart-container h3{font-size:1.05rem;color:#1e293b;margin-bottom:1rem;font-weight:600}
+        .fase-tag{display:inline-block;padding:.2rem .5rem;border-radius:4px;font-size:.8rem;font-weight:600}
+        .fase-af{background:#e0e7ff;color:#3730a3}
+        .fase-mb{background:#d1fae5;color:#065f46}
+        .section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;padding-bottom:.5rem;border-bottom:2px solid #e2e8f0}
+        .section-header h2{margin-bottom:0;padding-bottom:0;border-bottom:none}
+        .btn-download{display:inline-flex;align-items:center;gap:.4rem;background:#059669;color:#fff;border:none;padding:.5rem 1rem;border-radius:8px;cursor:pointer;font-size:.95rem;font-weight:600}
+        .btn-download:hover{background:#047857}
+        .print-btn{position:fixed;bottom:2rem;right:2rem;background:#1a1a2e;color:#fff;border:none;padding:.8rem 1.2rem;border-radius:50px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.3);font-size:.9rem;z-index:100}
+        .print-btn:hover{background:#16213e}
+        @media(max-width:768px){.metrics-grid{grid-template-columns:repeat(2,1fr)}.charts-grid{grid-template-columns:1fr}}
+        @media print{.print-btn,.btn-download{display:none!important}.header{padding:1rem}body{background:#fff}.section,.metric-card,.chart-container{box-shadow:none;border:1px solid #e2e8f0}}
+    </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Reporte de Ventas AXA — SOAT Digital (Proyectiva)</h1>
-        <p id="headerSubtitle">Carga el archivo Excel de ePayco para generar el informe automáticamente</p>
-        <input type="file" id="reloadFileInput" accept=".xlsx,.xls" style="display:none;">
-        <button id="btnReload" style="display:none;margin-top:0.8rem;background:#3b82f6;color:white;border:none;padding:0.5rem 1.2rem;border-radius:8px;cursor:pointer;font-size:0.9rem;font-weight:600;" onclick="document.getElementById('reloadFileInput').click()">Cargar nuevo archivo</button>
-    </div>
-    <div class="container">
-        <div class="upload-zone" id="uploadZone">
-            <h3>Arrastra el archivo Excel aquí o haz clic para seleccionar</h3>
-            <p>Formato esperado: reporte de ePayco (.xlsx)</p>
-            <input type="file" id="fileInput" accept=".xlsx,.xls">
-            <button class="btn" onclick="document.getElementById('fileInput').click()">Seleccionar archivo</button>
-        </div>
-        <div id="reportContent" style="display:none;"></div>
-        <button class="print-btn" id="printBtn" style="display:none;" onclick="window.print()">Imprimir / PDF</button>
-    </div>
+<div class="header">
+    <h1>Reporte de Ventas AXA — SOAT Digital (Proyectiva)</h1>
+    <p>Dashboard actualizado | <a href="upload.html">Subir nuevo archivo</a></p>
+</div>
+<div class="container" id="app"></div>
+<button class="print-btn" onclick="window.print()">Imprimir / PDF</button>
 <script>
-// === CONFIGURACIÓN ===
-const FECHA_CORTE = new Date(2026, 5, 20); // 20 de junio 2026
-const EXCLUIR_MONTOS = [2, 10]; // Montos de pruebas técnicas
-const STORAGE_KEY = 'soat_dashboard_data';
-const STORAGE_DATE_KEY = 'soat_dashboard_date';
+const DATA = {"exitosas":[{"fecha":"03-08-2026","placa":"EMU930","nombre":"AMERICA  REYES PENAGOS","telefono":3134193507,"email":"juliana2754@yahoo.com","metodoPago":"PSE","banco":"BANCOLOMBIA","monto":946600,"fase":"MB"},{"fecha":"03-08-2026","placa":"NQN026","nombre":"Daniel Felipe Velosa García","telefono":3184935319,"email":"daniel.velosa@segurosbolivar.com","metodoPago":"TARJETA","banco":"DAVIBANK","monto":792800,"fase":"MB"},{"fecha":"03-08-2026","placa":"RJW228","nombre":"LUIS CARLOS HERNANDEZ GONZALEZ","telefono":3214555468,"email":"luisca0316@yahoo.com","metodoPago":"PSE","banco":"BANCO DAVIVIENDA","monto":592900,"fase":"MB"},{"fecha":"02-08-2026","placa":"PRK130","nombre":"ARIEL SILVA SILVA ARIEL","telefono":3176594480,"email":"arielsilva@hotmail.es","metodoPago":"PSE","banco":"BANCOLOMBIA","monto":447300,"fase":"MB"},{"fecha":"02-08-2026","placa":"DQF24G","nombre":"SHIRLEY JULIETH ORTIZ GUTIERREZ","telefono":3104648752,"email":"shirley.ortiz1012@gmail.com","metodoPago":"TARJETA","banco":"BANCO DE BOGOTA","monto":343300,"fase":"MB"},{"fecha":"01-08-2026","placa":"KOO636","nombre":"HERNAN DARIO HERNANDEZ CADAVID","telefono":3226637072,"email":"helica2401@hotmail.es","metodoPago":"PSE","banco":"BANCOLOMBIA","monto":592900,"fase":"MB"},{"fecha":"01-08-2026","placa":"IBU476","nombre":"JOHAN ANDREY LONDONO DARAVINA","telefono":3175065638,"email":"johan.andrey.97@gmail.com","metodoPago":"PSE","banco":"BANCO DAVIVIENDA","monto":592900,"fase":"MB"},{"fecha":"01-08-2026","placa":"XEQ70E","nombre":"ELENA PATRICIA AGUIAR ESQUIVEL","telefono":3115504129,"email":"hellen1819@hotmail.com","metodoPago":"PSE","banco":"BANCO DAVIVIENDA","monto":343300,"fase":"MB"},{"fecha":"01-08-2026","placa":"DJQ279","nombre":"ISABEL CRISTINA OSORIO LOPEZ","telefono":3134779419,"email":"krispeta1@hotmail.com","metodoPago":"PSE","banco":"BANCOLOMBIA","monto":1121400,"fase":"MB"},{"fecha":"31-07-2026","placa":"GPS033","nombre":"DIANA ISABEL PRIETO RODRIGUEZ","telefono":3008118936,"email":"ojedaalbertoster@gmail.com","metodoPago":"TARJETA","banco":"NUBANK","monto":544700,"fase":"MB"},{"fecha":"31-07-2026","placa":"YVA16D","nombre":"JENNY MARCELA CRUZ GONZALEZ","telefono":3007457666,"email":"jenny.cruz@segurosbolivar.com","metodoPago":"TARJETA","banco":"BANCO DAVIVIENDA, S.A.","monto":343300,"fase":"MB"},{"fecha":"31-07-2026","placa":"DYE07G","nombre":"LEONEL CRUZ TRUJILLO LEONEL","telefono":3213178514,"email":"leonel.cruuuz@gmail.com","metodoPago":"PSE","banco":"NEQUI","monto":343300,"fase":"MB"},{"fecha":"30-07-2026","placa":"LFH60F","nombre":"ALVARO HELI ARIZA ESCAMILLA","telefono":3208494418,"email":"eliariza2016@gmail.com","metodoPago":"PSE","banco":"NEQUI","monto":761400,"fase":"MB"},{"fecha":"30-07-2026","placa":"HBR754","nombre":"TALIA CONSTANTIN CASAS TALIA","telefono":3143818867,"email":"taliaconstantin@hotmail.com","metodoPago":"PSE","banco":"DAVIBANK","monto":592900,"fase":"MB"},{"fecha":"28-07-2026","placa":"MBY876","nombre":"FAIVER  CEBALLOS ALVAREZ","telefono":3103465075,"email":"faiverc@hotmail.com","metodoPago":"TARJETA","banco":"NUBANK","monto":677400,"fase":"MB"},{"fecha":"28-07-2026","placa":"RCA64F","nombre":"LISBET DANIELA HERRERA MAYO","telefono":3015948233,"email":"lisbeb29@gmail.com","metodoPago":"PSE","banco":"BANCOLOMBIA","monto":343300,"fase":"MB"},{"fecha":"28-07-2026","placa":"JTX31F","nombre":"YURANI  MENESES ESCUDEROS","telefono":3163328839,"email":"ymeneses8309@gmail.com","metodoPago":"PSE","banco":"BANCOLOMBIA","monto":343300,"fase":"MB"},{"fecha":"28-07-2026","placa":"PHL437","nombre":"MAURICIO CADAVID BORDA MAURICIO","telefono":3102664812,"email":"m.cadavid@hotmail.com","metodoPago":"PSE","banco":"BANCO AV VILLAS","monto":946600,"fase":"MB"},{"fecha":"27-07-2026","placa":"PQT912","nombre":"ARLEY FERNANDO MENDOZA GUZMAN","telefono":3106390265,"email":"fundacionrunningbolivar@gmail.com","metodoPago":"PSE","banco":"NEQUI","monto":447300,"fase":"MB"},{"fecha":"27-07-2026","placa":"PHM942","nombre":"LUISA FERNANDA LEGUIZAMON BAYONA","telefono":3132943999,"email":"fernanditaby@gmail.com","metodoPago":"PSE","banco":"BANCO DAVIVIENDA","monto":792800,"fase":"MB"},{"fecha":"27-07-2026","placa":"PRU861","nombre":"ASTRID  MEJIA GARCIA","telefono":3104287208,"email":"astrid.mejia.garcia@gmail.com","metodoPago":"TARJETA","banco":"BANCO DE BOGOTA","monto":792800,"fase":"MB"},{"fecha":"27-07-2026","placa":"LXQ498","nombre":"ISABEL CRISTINA MARIN VALENCIA","telefono":3003847526,"email":"isabelmarin81@gmail.com","metodoPago":"TARJETA","banco":"BANCO DE BOGOTA","monto":946600,"fase":"MB"},{"fecha":"27-07-2026","placa":"NOZ839","nombre":"HELENA PATRICIA LOPEZ CAMPO","telefono":3014006485,"email":"helelopezcampo@gmail.com","metodoPago":"PSE","banco":"BANCOLOMBIA","monto":447300,"fase":"MB"},{"fecha":"26-07-2026","placa":"HFZ802","nombre":"JOSE AUGUSTO VILLEGAS IBAGON","telefono":3212303512,"email":"jose.ville92.jv@gmail.com","metodoPago":"PSE","banco":"BANCOLOMBIA","monto":677400,"fase":"MB"},{"fecha":"25-07-2026","placa":"BXY027","nombre":"EDUIN ALFONSO RODRIGUEZ OLAYA","telefono":3219917506,"email":"eduinr180@gmail.com","metodoPago":"PSE","banco":"BANCOLOMBIA","monto":544700,"fase":"MB"},{"fecha":"25-07-2026","placa":"HVM384","nombre":"RICARDO MARTINEZ RICARDO MARTINEZ","telefono":3123202411,"email":"ricardo.martinez1962@gmail.com","metodoPago":"PSE","banco":"BANCO DAVIVIENDA","monto":1121400,"fase":"MB"},{"fecha":"24-07-2026","placa":"NFL626","nombre":"CLARA XIMENA CACERES HERNANDEZ","telefono":3174376905,"email":"xime.caceres@live.com","metodoPago":"TARJETA","banco":"BANCO ITAU","monto":946600,"fase":"MB"},{"fecha":"24-07-2026","placa":"KLV589","nombre":"ANDREY JHOANNY LUNA BELTRAN","telefono":3105685476,"email":"andreyjho01@gmail.com","metodoPago":"TARJETA","banco":"BANCOLOMBIA","monto":677400,"fase":"MB"},{"fecha":"24-07-2026","placa":"CQF79E","nombre":"MAURICIO CARO DIAZ MAURICIO","telefono":3002064944,"email":"mcarodiaz@yahoo.es","metodoPago":"PSE","banco":"BANCO DAVIVIENDA","monto":343300,"fase":"MB"},{"fecha":"24-07-2026","placa":"JXK717","nombre":"CESAR ALONSO RICO SANCHEZ","telefono":3202463035,"email":"cesarrico_79@hotmail.com","metodoPago":"TARJETA","banco":"BANCO DAVIVIENDA, S.A.","monto":946600,"fase":"MB"},{"fecha":"23-07-2026","placa":"GCQ875","nombre":"JOSE EDILBERTO MUÑOZ RUIZ","telefono":3112019304,"email":"jemunoz@minenergia.gov.co","metodoPago":"PSE","banco":"BANCO DAVIVIENDA","monto":544700,"fase":"MB"},{"fecha":"23-07-2026","placa":"GCN906","nombre":"ANDRES CAMILO TAO ROMERO","telefono":3118651776,"email":"andres.tao@segurosbolivar.com","metodoPago":"TARJETA","banco":"BANCO DAVIVIENDA, S.A.","monto":946600,"fase":"MB"},{"fecha":"21-07-2026","placa":"NVX807","nombre":"JOECSY YOCSEANY LINARES SUAREZ","telefono":3246843057,"email":"joecsylinares@gmail.com","metodoPago":"PSE","banco":"NU","monto":447300,"fase":"MB"},{"fecha":"19-07-2026","placa":"AQK87H","nombre":"YIGNA LILIANA PRIETO SALDAÑA","telefono":3046572683,"email":"yprietosaldana@gmail.com","metodoPago":"TARJETA","banco":"NUBANK","monto":256200,"fase":"MB"},{"fecha":"18-07-2026","placa":"JLY805","nombre":"FREDDY CAMILO GONZALEZ BELTRAN","telefono":3126162826,"email":"ffego@hotmail.com","metodoPago":"TARJETA","banco":"BCSC","monto":946600,"fase":"MB"},{"fecha":"17-07-2026","placa":"FJW340","nombre":"LEIDY ANDREA ANGULO BUITRAGO","telefono":3125950042,"email":"andreaangulobuitrago652@gmail.com","metodoPago":"TARJETA","banco":"NUBANK","monto":544700,"fase":"MB"},{"fecha":"17-07-2026","placa":"BCU189","nombre":"INES NANCY LAGUNA DE","telefono":3167519075,"email":"CASCANTE318@GMAIL.COM","metodoPago":"TARJETA","banco":"NUBANK","monto":592900,"fase":"MB"},{"fecha":"16-07-2026","placa":"CJU67H","nombre":"RAUL ARTURO POSADA QUINTERO","telefono":3007921864,"email":"raulposada24@gmail.com","metodoPago":"PSE","banco":"BANCOLOMBIA","monto":343300,"fase":"MB"},{"fecha":"16-07-2026","placa":"AQJ67H","nombre":"GLORIA PATRICIA USMA OSPINA","telefono":3235115048,"email":"gp.usma17@ciaf.edu.co","metodoPago":"PSE","banco":"NEQUI","monto":343300,"fase":"MB"},{"fecha":"16-07-2026","placa":"IXT184","nombre":"GILBERTO VELOZA SOSA GILBERTO","telefono":3164103527,"email":"rgomezcuervo@gmail.com","metodoPago":"PSE","banco":"BANCO DAVIVIENDA","monto":1121400,"fase":"MB"},{"fecha":"15-07-2026","placa":"PSZ133","nombre":"YINETH MEDINA ARCE YINETH","telefono":3014307759,"email":"yinamedinaarce@hotmail.com","metodoPago":"PSE","banco":"BANCO DAVIVIENDA","monto":946600,"fase":"MB"},{"fecha":"15-07-2026","placa":"PVP715","nombre":"DEBORA PATRICIA BALAGUERA SAAVEDRA","telefono":3123346403,"email":"de_bora12@hotmail.com","metodoPago":"PSE","banco":"BANCOLOMBIA","monto":946600,"fase":"MB"},{"fecha":"14-07-2026","placa":"NFQ367","nombre":"MARGARITA ISABEL MOLINARES GONZALEZ","telefono":3007603363,"email":"margaritamolinares1987@gmail.com","metodoPago":"PSE","banco":"BANCOLOMBIA","monto":946600,"fase":"MB"},{"fecha":"11-07-2026","placa":"BNT388","nombre":"MARIO ORLANDO CAMACHO REYES","telefono":3125769593,"email":"Camachoreyesmario@gmail.con","metodoPago":"TARJETA","banco":"NUBANK","monto":1017700,"fase":"MB"},{"fecha":"10-07-2026","placa":"KGC729","nombre":"SONIA ROSA RIOS DIAZ","telefono":3157966531,"email":"zarayrios36@gmail.com","metodoPago":"PSE","banco":"NEQUI","monto":677400,"fase":"MB"},{"fecha":"09-07-2026","placa":"EOV875","nombre":"ALEJANDRO SIERRA RESTREPO ALEJANDRO","telefono":3127937361,"email":"alejosierra9@hotmail.com","metodoPago":"PSE","banco":"BANCOLOMBIA","monto":447300,"fase":"MB"},{"fecha":"09-07-2026","placa":"IRH81F","nombre":"JOSE MIGUEL SANDOVAL MENJURA","telefono":3208970495,"email":"jsandovalmenjura@gmail.com","metodoPago":"TARJETA","banco":"RAPPIPAY","monto":761400,"fase":"MB"},{"fecha":"09-07-2026","placa":"HSV907","nombre":"JESUS FABIAN JAIMES COLMENARES","telefono":3208650063,"email":"jesus.jaimes@segurosbolivar.com","metodoPago":"TARJETA","banco":"DAVIBANK","monto":1121400,"fase":"MB"},{"fecha":"08-07-2026","placa":"UTS025","nombre":"CINDY PAOLA MERCADO MORGAN","telefono":3017945725,"email":"CINDY.MERCADO@SEGUROSBOLIVAR.COM","metodoPago":"TARJETA","banco":"FALABELLA","monto":677400,"fase":"MB"},{"fecha":"08-07-2026","placa":"SHA03E","nombre":"JOSE CIPRIANO RICARDO CONTRERAS","telefono":3126790420,"email":"whocares221@hotmail.com","metodoPago":"PSE","banco":"NEQUI","monto":256200,"fase":"MB"},{"fecha":"08-07-2026","placa":"AUT259","nombre":"WILMA BETTY JIMENEZ DUQUE","telefono":3187950276,"email":"dcmj75@hotmail.com","metodoPago":"PSE","banco":"BANCOLOMBIA","monto":592900,"fase":"MB"},{"fecha":"08-07-2026","placa":"CYP645","nombre":"GINANDRA MARCELA  TOCORA","telefono":3165884681,"email":"jmontesanto.gt@gmail.com","metodoPago":"TARJETA","banco":"SERFINANSA","monto":1281600,"fase":"MB"},{"fecha":"08-07-2026","placa":"DCX297","nombre":"MARTIN OSWALDO ROMERO ALFONSO","telefono":3057059961,"email":"martin.romeroa@etb.com.co","metodoPago":"PSE","banco":"BANCO CAJA SOCIAL","monto":677400,"fase":"MB"},{"fecha":"08-07-2026","placa":"HZY931","nombre":"SILVIA DEL SOCORRO PEÑARREDONDA","telefono":3146735398,"email":"silviamargarita06@gmail.com","metodoPago":"TARJETA","banco":"SERFINANSA","monto":677400,"fase":"MB"},{"fecha":"08-07-2026","placa":"FZX604","nombre":"CARLOS HUMBERTO MADIEDO MONTOYA","telefono":3164611686,"email":"colomprueba@gmail.com","metodoPago":"TARJETA","banco":"BANCO DAVIVIENDA, S.A.","monto":946600,"fase":"MB"},{"fecha":"07-07-2026","placa":"HCQ066","nombre":"EDGAR ALBERTO SIMBAQUEBA MORENO","telefono":3007006207,"email":"edsimb2@yahoo.com","metodoPago":"TARJETA","banco":"BANCO DAVIVIENDA, S.A.","monto":1121400,"fase":"MB"},{"fecha":"07-07-2026","placa":"PGM467","nombre":"ALFREDO LUIS FLOREZ CABRALES","telefono":3103629261,"email":"alfredofc1@hotmail.com","metodoPago":"TARJETA","banco":"BANCO DAVIVIENDA, S.A.","monto":1110300,"fase":"MB"},{"fecha":"07-07-2026","placa":"DRX357","nombre":"MARIA MARCELA FREITE BARRANCO","telefono":3012122626,"email":"mamafreba@gmail.com","metodoPago":"PSE","banco":"BANCO DAVIVIENDA","monto":544700,"fase":"MB"},{"fecha":"07-07-2026","placa":"GYW952","nombre":"CARLOS  PAREDES GOMEZ","telefono":3164907331,"email":"carlospa567@yahoo.es","metodoPago":"TARJETA","banco":"BANCO DE BOGOTA","monto":946600,"fase":"MB"},{"fecha":"06-07-2026","placa":"RIW98G","nombre":"VALENTINA  PINEDA ROJAS","telefono":3508207198,"email":"valentinapinedarojas16@gmail.com","metodoPago":"TARJETA","banco":"DAVIBANK","monto":343300,"fase":"MB"},{"fecha":"06-07-2026","placa":"LLO577","nombre":"MIREYA ISABEL GUERRA PATINO","telefono":3147142725,"email":"mireyaisa3@gmail.com","metodoPago":"PSE","banco":"BANCOLOMBIA","monto":281900,"fase":"MB"},{"fecha":"06-07-2026","placa":"LKJ888","nombre":"INES LOPERA DE SANTODOMINGO","telefono":3004713557,"email":"inesloperasantod@gmail.com","metodoPago":"PSE","banco":"BANCO DAVIVIENDA","monto":677400,"fase":"MB"},{"fecha":"06-07-2026","placa":"DUM231","nombre":"RICARDO ANGARITA HERRERA RICARDO","telefono":3007414357,"email":"ricanghe@gmail.com","metodoPago":"PSE","banco":"BANCOLOMBIA","monto":544700,"fase":"MB"},{"fecha":"05-07-2026","placa":"EMN959","nombre":"VICTOR JULIO RODRIGUEZ SANTAFE","telefono":3103376224,"email":"rsantafe2012@gmail.com","metodoPago":"PSE","banco":"BANCO BBVA COLOMBIA S.A.","monto":544700,"fase":"MB"},{"fecha":"05-07-2026","placa":"FGO206","nombre":"DEIBY  HERNANDEZ DEIBY","telefono":3114558373,"email":"deibyher052@gmail.com","metodoPago":"TARJETA","banco":"DAVIBANK","monto":1121400,"fase":"MB"},{"fecha":"04-07-2026","placa":"VEO91F","nombre":"CLEOTILDE GONZALEZ PARDO CLEOTILDE","telefono":3134956756,"email":"yorleny19@hotmail.com","metodoPago":"PSE","banco":"BANCO CAJA SOCIAL","monto":343300,"fase":"MB"},{"fecha":"04-07-2026","placa":"LNY253","nombre":"MIGUELANGEL REYES ROJAS MIGUELANGEL","telefono":3507690304,"email":"miguelangelrr6@gmail.com","metodoPago":"PSE","banco":"BANCOLOMBIA","monto":544700,"fase":"MB"},{"fecha":"04-07-2026","placa":"MJV372","nombre":"HECTOR JAVIER HORTUA ORJUELA","telefono":3222417787,"email":"orjuelajavier@gmail.com","metodoPago":"TARJETA","banco":"NUBANK","monto":677400,"fase":"MB"},{"fecha":"04-07-2026","placa":"DDR936","nombre":"YOBANI  MORENO ESTRADA","telefono":3115611489,"email":"yobamoreno@yahoo.com","metodoPago":"TARJETA","banco":"BANCOLOMBIA","monto":677400,"fase":"MB"},{"fecha":"04-07-2026","placa":"DCR503","nombre":"MYRIAM MARIA MONTAÑA MORENO","telefono":3012299901,"email":"vilmaelisa@gmail.com","metodoPago":"TARJETA","banco":"BCSC","monto":677400,"fase":"MB"},{"fecha":"03-07-2026","placa":"FZX690","nombre":"JULIA MARCELA CHAVES RAMIREZ","telefono":3212134951,"email":"pfmmr04@yahoo.com","metodoPago":"PSE","banco":"BANCO CORPBANCA S.A","monto":447300,"fase":"MB"},{"fecha":"03-07-2026","placa":"SWX066","nombre":"JULIANA BALVIN CARDONA JULIANA","telefono":3217579524,"email":"transheliconias@gmail.com","metodoPago":"PSE","banco":"BANCOLOMBIA","monto":1282800,"fase":"MB"},{"fecha":"03-07-2026","placa":"RBT273","nombre":"CARLOS ANDRES GUZMAN SALAMANCA","telefono":3118562104,"email":"carlos.andres.guzman.cg@gmail.com","metodoPago":"PSE","banco":"BANCO DAVIVIENDA","monto":677400,"fase":"MB"},{"fecha":"03-07-2026","placa":"BXO86B","nombre":"HENRY QUINONES RODRIGUEZ HENRY","telefono":3217868350,"email":"henryqr378@gmail.com","metodoPago":"PSE","banco":"BANCO DE BOGOTA","monto":256200,"fase":"MB"},{"fecha":"03-07-2026","placa":"IYL949","nombre":"JAIME ALFONSO LARROTTA PINILLA","telefono":3134816045,"email":"jaimelarrotta@yahoo.com","metodoPago":"PSE","banco":"BANCO DAVIVIENDA","monto":677400,"fase":"MB"},{"fecha":"02-07-2026","placa":"UDQ113","nombre":"CRISTIAN ALEJANDRO BUSTAMANTE JARAMILLO","telefono":3136964619,"email":"desinoxlb@gmail.com","metodoPago":"TARJETA","banco":"BANCOLOMBIA","monto":946600,"fase":"MB"},{"fecha":"02-07-2026","placa":"BNB146","nombre":"JAIRO HERNANDO MARTINEZ BOLIVAR","telefono":3124744619,"email":"jahemabo@yahoo.com","metodoPago":"PSE","banco":"BANCO DAVIVIENDA","monto":592900,"fase":"MB"},{"fecha":"02-07-2026","placa":"GSO92G","nombre":"ARNOBIS JULIO JULIO ARNOBIS","telefono":3145512803,"email":"mamabaga@yahoo.com","metodoPago":"PSE","banco":"BANCO BBVA COLOMBIA S.A.","monto":343300,"fase":"MB"},{"fecha":"01-07-2026","placa":"BFO788","nombre":"ALFONSO LOPEZ SAENZ ALFONSO","telefono":3173714863,"email":"lopezandres@yahoo.com","metodoPago":"PSE","banco":"BANCO CAJA SOCIAL","monto":677400,"fase":"MB"},{"fecha":"01-07-2026","placa":"ETQ82G","nombre":"STEFANY DEL CARMEN CAMACHO","telefono":3106472067,"email":"fisioterapeutapviejo@gmail.com","metodoPago":"PSE","banco":"DAVIPLATA","monto":343300,"fase":"MB"},{"fecha":"30-06-2026","placa":"UPU14F","nombre":"CLAUDIA ANDREA HERMIDA LOPEZ","telefono":3183018873,"email":"jroa34@hotmail.com","metodoPago":"PSE","banco":"DAVIPLATA","monto":343300,"fase":"MB"},{"fecha":"30-06-2026","placa":"LDE55F","nombre":"RICARDO JOSE ZUNIGA VIVES","telefono":3008373932,"email":"comercial@comercialorzuma.com","metodoPago":"PSE","banco":"BANCO DAVIVIENDA","monto":761400,"fase":"MB"},{"fecha":"28-06-2026","placa":"POV216","nombre":"EVELIN JULIETH MEDINA ROJAS","telefono":3103140772,"email":"evelinmedinar@hotmail.com","metodoPago":"TARJETA","banco":"BBVA BANCO GANADERO, S.A.","monto":792800,"fase":"MB"},{"fecha":"28-06-2026","placa":"CVF170","nombre":"LUIS ALBERTO GUAJE HERNANDEZ","telefono":3144096297,"email":"la_guaje@hotmail.com","metodoPago":"PSE","banco":"BANCO DAVIVIENDA","monto":677400,"fase":"MB"},{"fecha":"28-06-2026","placa":"DYQ463","nombre":"MARIA TERESA HERNANDEZ HERNANDEZ","telefono":3176708407,"email":"mildredavilas@gmail.com","metodoPago":"PSE","banco":"BANCOLOMBIA","monto":1017700,"fase":"MB"},{"fecha":"27-06-2026","placa":"HBW580","nombre":"JAVIER RICARDO FORERO SOPO","telefono":3102727853,"email":"ricardoforero78@yahoo.com","metodoPago":"PSE","banco":"BANCO BBVA COLOMBIA S.A.","monto":592900,"fase":"MB"},{"fecha":"26-06-2026","placa":"RFX821","nombre":"MAURICIO  FRANCO RODRIGUEZ","telefono":3157958909,"email":"francomauro2002@yahoo.com","metodoPago":"PSE","banco":"BANCOLOMBIA","monto":677400,"fase":"MB"},{"fecha":"26-06-2026","placa":"EMR162","nombre":"LUZ STELLA BELLO ZAMORA","telefono":3015301130,"email":"stellabz@yahoo.com","metodoPago":"TARJETA","banco":"BANCO DAVIVIENDA, S.A.","monto":544700,"fase":"MB"},{"fecha":"26-06-2026","placa":"IWS373","nombre":"JAIME ALVARADO BESTENE JAIME","telefono":3153085059,"email":"consultorio710@yahoo.com","metodoPago":"PSE","banco":"BANCO CORPBANCA S.A","monto":1121400,"fase":"MB"},{"fecha":"25-06-2026","placa":"CYW179","nombre":"EDWIN JAVIER HERNANDEZ MONTAÑEZ","telefono":3115427913,"email":"edwinjhm2681@gmail.com","metodoPago":"TARJETA","banco":"BANCO DAVIVIENDA, S.A.","monto":677400,"fase":"MB"},{"fecha":"25-06-2026","placa":"MCU825","nombre":"PABLO GABRIEL DE JESUS","telefono":3005907501,"email":"gabriel.pinzonr@hotmail.com","metodoPago":"TARJETA","banco":"BANCO DAVIVIENDA, S.A.","monto":677400,"fase":"MB"},{"fecha":"24-06-2026","placa":"PGR527","nombre":"NOLBERTO RIOS CHAVES NOLBERTO","telefono":3208090102,"email":"nrioschavez@yahoo.com","metodoPago":"PSE","banco":"DAVIBANK","monto":946600,"fase":"MB"},{"fecha":"23-06-2026","placa":"LXM303","nombre":"DIANA CECILIA ZULUAGA GIRALDO","telefono":3136486149,"email":"dianazuluaga222@hotmail.com","metodoPago":"TARJETA","banco":"BANCOLOMBIA","monto":946600,"fase":"MB"},{"fecha":"22-06-2026","placa":"OAI24E","nombre":"YOVANIS MANUEL GALINDO RAMOS","telefono":3118867549,"email":"josmanbar@hotmail.com","metodoPago":"TARJETA","banco":"DAVIBANK","monto":343300,"fase":"MB"},{"fecha":"21-06-2026","placa":"RZQ10G","nombre":"CARMEN JULIA BERTEL MERCADO","telefono":3146414919,"email":"tavofunezzenu@gmail.com","metodoPago":"PSE","banco":"BANCO DAVIVIENDA","monto":343300,"fase":"MB"},{"fecha":"20-06-2026","placa":"WUU60C","nombre":"CONSUELO DE JESUS JARAMILLO","telefono":3105397710,"email":"bordadosyetex2@gmail.com","metodoPago":"PSE","banco":"BANCOLOMBIA","monto":343300,"fase":"MB"},{"fecha":"19-06-2026","placa":"IDO803","nombre":"CARLOS ANDRES TORRES DOMINGUEZ","telefono":3182014947,"email":"carlos.torres@segurosbolivar.com","metodoPago":"TARJETA","banco":"BANCO DAVIVIENDA, S.A.","monto":946600,"fase":"AF"},{"fecha":"19-06-2026","placa":"STY49F","nombre":"JEIMMY KATHERINE URREA ZULUAGA","telefono":3142560639,"email":"jeimmy.urrea@segurosbolivar.com","metodoPago":"PSE","banco":"BANCO DAVIVIENDA","monto":343300,"fase":"AF"},{"fecha":"17-06-2026","placa":"RJY799","nombre":"JORGE LEONARDO CHAVARRO CASTANEDA","telefono":3004508128,"email":"jleonardochavarro@gmail.com","metodoPago":"PSE","banco":"BANCO DAVIVIENDA","monto":592900,"fase":"AF"},{"fecha":"17-06-2026","placa":"LWZ059","nombre":"MARYELIN DEL VALLE PEREZ","telefono":3197530652,"email":"perez.c.maryelin@gmail.com","metodoPago":"TARJETA","banco":"BANCO DAVIVIENDA, S.A.","monto":792800,"fase":"AF"},{"fecha":"17-06-2026","placa":"HBV383","nombre":"SANDRA MILENA LOPEZ HERNANDEZ","telefono":3115123932,"email":"sandra.lopez@segurosbolivar.com","metodoPago":"PSE","banco":"BANCO DAVIVIENDA","monto":1017700,"fase":"AF"},{"fecha":"16-06-2026","placa":"LOQ621","nombre":"JUAN FRANCISCO JAVIER CORREAL","telefono":3138701807,"email":"jcorreal55@hotmail.com","metodoPago":"PSE","banco":"BANCO DAVIVIENDA","monto":792800,"fase":"AF"},{"fecha":"10-06-2026","placa":"EMM433","nombre":"ANGELA PATRICIA MORA BUITRAGO","telefono":3014477339,"email":"morita12@hotmail.com","metodoPago":"PSE","banco":"BANCO DAVIVIENDA","monto":544700,"fase":"AF"},{"fecha":"10-06-2026","placa":"DQM009","nombre":"SANDRA LILIANA GOMEZ SARMIENTO","telefono":3223521509,"email":"sandra.gomez@segurosbolivar.com","metodoPago":"PSE","banco":"BANCO DAVIVIENDA","monto":447300,"fase":"AF"},{"fecha":"10-06-2026","placa":"HAW995","nombre":"DANIEL GIOVANNY BARRERA PACHON","telefono":3214960329,"email":"flaier.778@hotmail.com","metodoPago":"PSE","banco":"BANCO FALABELLA ","monto":677400,"fase":"AF"},{"fecha":"09-06-2026","placa":"LZT488","nombre":"YESICA ANDREA GUTIERREZ BRAVO","telefono":3146627745,"email":"yesikguty@gmail.com","metodoPago":"PSE","banco":"BANCO DAVIVIENDA","monto":946600,"fase":"AF"},{"fecha":"09-06-2026","placa":"TZM01E","nombre":"WILFREDO JIMENEZ MURCIA WILFREDO","telefono":3508514803,"email":"diegoh.murciah@gmail.com","metodoPago":"PSE","banco":"BANCO DAVIVIENDA","monto":343300,"fase":"AF"}],"noExitosas":[{"fecha":"03-08-2026","placa":"TJP070","nombre":"JESUS ALBERTO AGUDELO ORTIZ","telefono":3114756283,"email":"jesuslux1505@gmail.com","metodoPago":"TARJETA","monto":432400,"estado":"RECHAZADO","detalleEstado":"La tarjeta no existe"},{"fecha":"31-07-2026","placa":"BHP32H","nombre":"SEBASTIAN  VALENCIA ARCE","telefono":3175014473,"email":"svalenciaarce@gmail.com","metodoPago":"PSE","monto":343300,"estado":"RECHAZADO","detalleEstado":"00015-El usuario no finalizo la transacción en el banco"},{"fecha":"31-07-2026","placa":"XWF41F","nombre":"ELVER  VILLA OROZCO","telefono":3103469423,"email":"villaorozco.78@hotmail.com","metodoPago":"PSE","monto":343300,"estado":"RECHAZADO","detalleEstado":"00015-El usuario no finalizo la transacción en el banco"},{"fecha":"31-07-2026","placa":"TUJ74D","nombre":"LUZ MARINA CLAVIJO ARBOLEDA","telefono":3206890376,"email":"jgc2119majaca.lmc@gmail.com","metodoPago":"PSE","monto":343300,"estado":"RECHAZADO","detalleEstado":"00001-El usuario no acepto o rechazo la transacción en el banco"},{"fecha":"29-07-2026","placa":"BMR955","nombre":"ELVIRA  GUERRERO VERGARA","telefono":3158668855,"email":"salvatd62@gmail.com","metodoPago":"PSE","monto":592900,"estado":"RECHAZADO","detalleEstado":"00001-El usuario no acepto o rechazo la transacción en el banco"},{"fecha":"28-07-2026","placa":"JTX31F","nombre":"YURANI MENESES ESCUDEROS YURANI","telefono":3163328839,"email":"ymeneses8309@gmail.com","metodoPago":"PSE","monto":343300,"estado":"RECHAZADO","detalleEstado":"Saldo insuficiente en la cuenta bancaria del usuario"},{"fecha":"27-07-2026","placa":"PHM942","nombre":"LUISA FERNANDA LEGUIZAMON BAYONA","telefono":3132943999,"email":"fernanditaby@gmail.com","metodoPago":"TARJETA","monto":792800,"estado":"RECHAZADO","detalleEstado":"Tarjeta invalida"},{"fecha":"27-07-2026","placa":"PHL437","nombre":"MAURICIO  CADAVID BORDA","telefono":3102664812,"email":"m.cadavid@hotmail.com","metodoPago":"PSE","monto":946600,"estado":"RECHAZADO","detalleEstado":"00015-El usuario no finalizo la transacción en el banco"},{"fecha":"27-07-2026","placa":"NUS999","nombre":"GUILLERMO LEON SALAZAR GAVIRIA","telefono":3202110724,"email":"musicagsg@hotmail.com","metodoPago":"","monto":946600,"estado":"RETURNED","detalleEstado":"Sin detalle"},{"fecha":"27-07-2026","placa":"DZA85H","nombre":"DAIRO DARIO JULIO LOPEZ","telefono":3234748230,"email":"dairo.1987@outlook.com","metodoPago":"PSE","monto":256200,"estado":"RECHAZADO","detalleEstado":"00011-Saldo insuficiente en la cuenta bancaria del usuario"},{"fecha":"27-07-2026","placa":"DZA85H","nombre":"DAIRO DARIO JULIO LOPEZ","telefono":3234748230,"email":"dairo.1987@outlook.com","metodoPago":"PSE","monto":256200,"estado":"RETURNED","detalleEstado":"Datos de acceso al banco inválidos"},{"fecha":"27-07-2026","placa":"DZA85H","nombre":"DAIRO DARIO JULIO LOPEZ","telefono":3234748230,"email":"dairo.1987@outlook.com","metodoPago":"","monto":256200,"estado":"RETURNED","detalleEstado":"Sin detalle"},{"fecha":"26-07-2026","placa":"PHL437","nombre":"MAURICIO  CADAVID BORDA","telefono":3102664812,"email":"m.cadavid@hotmail.com","metodoPago":"","monto":946600,"estado":"RETURNED","detalleEstado":"Sin detalle"},{"fecha":"25-07-2026","placa":"GIN099","nombre":"MILLER   SAA","telefono":3115458223,"email":"millersaagarzon17@gmail.com","metodoPago":"PSE","monto":888400,"estado":"RECHAZADO","detalleEstado":"00015-El usuario no finalizo la transacción en el banco"},{"fecha":"25-07-2026","placa":"GIN099","nombre":"MILLER SAA GARZON MILLER","telefono":3115458223,"email":"millersaagarzon17@gmail.com","metodoPago":"PSE","monto":888400,"estado":"RECHAZADO","detalleEstado":"00001-El usuario no acepto o rechazo la transacción en el banco"},{"fecha":"24-07-2026","placa":"DWD55H","nombre":"SHIRLEY  BENITEZ FELIZZOLA","telefono":3245772718,"email":"shirleyjonny04@gmail.com","metodoPago":"PSE","monto":343300,"estado":"RECHAZADO","detalleEstado":"04-(FAIL_BANKNOTEXISTSORDISABLED) PSE no se encuentra disponible para iniciar la transacción"},{"fecha":"23-07-2026","placa":"GIN099","nombre":"MILLER SAA GARZON MILLER","telefono":3115458223,"email":"millersaagarzon17@gmail.com","metodoPago":"PSE","monto":888400,"estado":"RECHAZADO","detalleEstado":"El usuario no acepto o rechazo la transacción en el banco"},{"fecha":"23-07-2026","placa":"PGR165","nombre":"CARLOS ANDRES NIÑO PIRAJAN","telefono":3014923477,"email":"angelo.sanchez.n@gmail.com","metodoPago":"DAVIPLATA","monto":447300,"estado":"EXPIRADA","detalleEstado":"Sin detalle"},{"fecha":"23-07-2026","placa":"GCQ875","nombre":"JOSE EDILBERTO MUÑOZ RUIZ","telefono":3112019304,"email":"jemunoz@minenergia.gov.co","metodoPago":"","monto":544700,"estado":"RETURNED","detalleEstado":"Sin detalle"},{"fecha":"23-07-2026","placa":"DAF617","nombre":"ALEXANDER  LOPEZ PIÑERES","telefono":3014923477,"email":"angelo.sanchez.n@gmail.com","metodoPago":"DAVIPLATA","monto":677400,"estado":"EXPIRADA","detalleEstado":"Sin detalle"},{"fecha":"23-07-2026","placa":"GCN906","nombre":"ANDRES CAMILO TAO ROMERO","telefono":3118651776,"email":"andres.tao@segurosbolivar.com","metodoPago":"PSE","monto":946600,"estado":"RECHAZADO","detalleEstado":"Transacción declinada por el preautorizador del banco"},{"fecha":"23-07-2026","placa":"GCN906","nombre":"ANDRES CAMILO TAO ROMERO","telefono":3118651776,"email":"andres.tao@segurosbolivar.com","metodoPago":"PSE","monto":946600,"estado":"RECHAZADO","detalleEstado":"Transacción declinada por el preautorizador del banco"},{"fecha":"23-07-2026","placa":"GCN906","nombre":"ANDRES CAMILO TAO ROMERO","telefono":3118651776,"email":"andres.tao@segurosbolivar.com","metodoPago":"TARJETA","monto":946600,"estado":"RECHAZADO","detalleEstado":"La tarjeta del usuario esta vencida"},{"fecha":"22-07-2026","placa":"HVM384","nombre":"RICARDO  MARTINEZ RICARDO","telefono":3123202411,"email":"ricardo.martinez1962@gmail.com","metodoPago":"TARJETA","monto":1121400,"estado":"RECHAZADO","detalleEstado":"Transacción Rechazada por políticas de la franquicia, intente más tarde."},{"fecha":"22-07-2026","placa":"HVM384","nombre":"RICARDO MARTINEZ RICARDO MARTINEZ","telefono":3123202411,"email":"ricardo.martinez1962@gmail.com","metodoPago":"PSE","monto":1121400,"estado":"RECHAZADO","detalleEstado":"El usuario no acepto o rechazo la transacción en el banco"},{"fecha":"20-07-2026","placa":"BRI273","nombre":"JESUS DAVID CASTIBLANCO REYES","telefono":3204652913,"email":"david.chinitho10@gmail.com","metodoPago":"PSE","monto":592900,"estado":"RECHAZADO","detalleEstado":"00001-El usuario no acepto o rechazo la transacción en el banco"},{"fecha":"19-07-2026","placa":"DAF617","nombre":"ALEXANDER  LOPEZ PIÑERES","telefono":3183916477,"email":"luis.alberto.vasquez@proyectivaseguros.com","metodoPago":"DAVIPLATA","monto":677400,"estado":"INTENTADO","detalleEstado":"Sin detalle"},{"fecha":"19-07-2026","placa":"FZQ973","nombre":"LUIS HERNANDO LEON BUSTOS","telefono":3014784972,"email":"lhleon@davivienda.com","metodoPago":"PSE","monto":447300,"estado":"RECHAZADO","detalleEstado":"00015-El usuario no finalizo la transacción en el banco"},{"fecha":"19-07-2026","placa":"PGR165","nombre":"CARLOS ANDRES NIÑO PIRAJAN","telefono":3103086601,"email":"carlos.nino@segurosbolivar.com","metodoPago":"DAVIPLATA","monto":447300,"estado":"INTENTADO","detalleEstado":"Sin detalle"},{"fecha":"19-07-2026","placa":"LKM712","nombre":"MARIA DEL PILAR RODRIGUEZ","telefono":3203474072,"email":"maria.del.pilar.rodriguez@segurosbolivar.com","metodoPago":"PSE","monto":946600,"estado":"RECHAZADO","detalleEstado":"00004-La cuenta bancaria del usuario no existe"},{"fecha":"19-07-2026","placa":"FZQ973","nombre":"LUIS HERNANDO LEON BUSTOS","telefono":3014784972,"email":"lhleon@davivienda.com","metodoPago":"TARJETA","monto":447300,"estado":"RECHAZADO","detalleEstado":"Tarjeta invalida"},{"fecha":"19-07-2026","placa":"DAF617","nombre":"ALEXANDER  LOPEZ PIÑERES","telefono":3005555490,"email":"alexander.lopez@segurosbolivar.com","metodoPago":"PSE","monto":677400,"estado":"RECHAZADO","detalleEstado":"00001-El usuario no acepto o rechazo la transacción en el banco"},{"fecha":"17-07-2026","placa":"DCE949","nombre":"MAURICIO JAVIER GARCIA YEPES","telefono":3125192716,"email":"maga1164@hotmail.com","metodoPago":"PSE","monto":677400,"estado":"RECHAZADO","detalleEstado":"Transacción declinada por el preautorizador del banco"},{"fecha":"17-07-2026","placa":"ZYU700","nombre":"JOSE SIMON DIAZ RODRIGUEZ","telefono":3144725057,"email":"jo.si.di@hotmail.com","metodoPago":"PSE","monto":1121400,"estado":"RECHAZADO","detalleEstado":"00004-La cuenta bancaria del usuario no existe"},{"fecha":"16-07-2026","placa":"HFZ802","nombre":"JOSE AUGUSTO VILLEGAS IBAGON","telefono":3212303512,"email":"jose.ville92.jv@gmail.com","metodoPago":"PSE","monto":677400,"estado":"RECHAZADO","detalleEstado":"00023-El usuario no finalizo la transacción en PSE"},{"fecha":"15-07-2026","placa":"IXT184","nombre":"GILBERTO  VELOZA SOSA","telefono":3164103527,"email":"ricardo.gomez@segurosbolivar.com","metodoPago":"PSE","monto":1121400,"estado":"RECHAZADO","detalleEstado":"00015-El usuario no finalizo la transacción en el banco"},{"fecha":"15-07-2026","placa":"IXT184","nombre":"GILBERTO VELOZA SOSA GILBERTO","telefono":3164103527,"email":"rgomezcuervo@yahoo.com","metodoPago":"PSE","monto":1121400,"estado":"RECHAZADO","detalleEstado":"Transacción declinada por el preautorizador del banco"},{"fecha":"07-07-2026","placa":"CJM80H","nombre":"ALVARO ADRIAN RAMIREZ GOMEZ","telefono":3332784085,"email":"alvaro.arg5@gmail.com","metodoPago":"PSE","monto":343300,"estado":"RECHAZADO","detalleEstado":"00001-El usuario no acepto o rechazo la transacción en el banco"},{"fecha":"06-07-2026","placa":"LLO577","nombre":"MIREYA ISABEL GUERRA PATINO","telefono":3147142725,"email":"mireyaisa3@gmail.com","metodoPago":"PSE","monto":281900,"estado":"RECHAZADO","detalleEstado":"El usuario no acepto o rechazo la transacción en el banco"},{"fecha":"04-07-2026","placa":"DDR936","nombre":"YOBANI  MORENO ESTRADA","telefono":3115611489,"email":"yobamoreno@yahoo.com","metodoPago":"TARJETA","monto":677400,"estado":"RECHAZADO","detalleEstado":"Saldo insuficiente en la tarjeta"},{"fecha":"04-07-2026","placa":"DCR503","nombre":"MYRIAM MARIA MONTAÑA MORENO","telefono":3186318187,"email":"julliette.archila@gmail.com","metodoPago":"TARJETA","monto":677400,"estado":"RECHAZADO","detalleEstado":"El banco emisor de la tarjeta no esta soportado por el sistema"},{"fecha":"03-07-2026","placa":"HZL414","nombre":"CARLOS ALBERTO LOPEZ RAMIREZ","telefono":3007902361,"email":"santiago.lopezmu@hotmail.com","metodoPago":"PSE","monto":677400,"estado":"RECHAZADO","detalleEstado":"00001-El usuario no acepto o rechazo la transacción en el banco"},{"fecha":"03-07-2026","placa":"IYD19F","nombre":"JUAN JOSE GUERRERO JULIO","telefono":3022115345,"email":"juanse9407@hotmail.com","metodoPago":"PSE","monto":343300,"estado":"RECHAZADO","detalleEstado":"00015-El usuario no finalizo la transacción en el banco"},{"fecha":"02-07-2026","placa":"PAQ910","nombre":"ARMANDO  RESTREPO ALVAREZ","telefono":3192598716,"email":"ararestrepo0013@yahoo.com","metodoPago":"PSE","monto":792800,"estado":"RECHAZADO","detalleEstado":"00023-El usuario no finalizo la transacción en PSE"},{"fecha":"01-07-2026","placa":"PHF17F","nombre":"LINA BEANERY ARROYAVE MESA","telefono":3003566815,"email":"linaarroyave@hotmail.com","metodoPago":"PSE","monto":343300,"estado":"RECHAZADO","detalleEstado":"00008-La transacción supera el monto limite autorizado por el banco para el usuario"},{"fecha":"01-07-2026","placa":"DXT78F","nombre":"JIMMY EDDISON BRAVO CUELLAR","telefono":3118126950,"email":"mocoanocapital8@gmail.com","metodoPago":"DAVIPLATA","monto":761400,"estado":"INTENTADO","detalleEstado":"Sin detalle"},{"fecha":"30-06-2026","placa":"QZL26C","nombre":"CARLOS ALBERTO VENEGAS ACUÑA","telefono":3123020216,"email":"carlosvenegasdrb@hotmail.com","metodoPago":"DAVIPLATA","monto":256200,"estado":"INTENTADO","detalleEstado":"Sin detalle"},{"fecha":"28-06-2026","placa":"EMM604","nombre":"WILLIAM FERNANDO ALBARRACIN BARRETO","telefono":3102053014,"email":"wfalbarracin@yahoo.es","metodoPago":"PSE","monto":1067300,"estado":"RECHAZADO","detalleEstado":"00006-La cuenta bancaria del usuario es invalida"},{"fecha":"27-06-2026","placa":"HJT113","nombre":"CESAR FABIAN FUENTES GUTIERREZ","telefono":3153384054,"email":"familyfuentesm@gmail.com","metodoPago":"PSE","monto":677400,"estado":"RECHAZADO","detalleEstado":"SUCCESS-Transacción Fallida"},{"fecha":"27-06-2026","placa":"HJT113","nombre":"CESAR FABIAN FUENTES GUTIERREZ","telefono":3153384054,"email":"familyfuentesm@gmail.com","metodoPago":"PSE","monto":677400,"estado":"RECHAZADO","detalleEstado":"La transacción supera el monto limite autorizado por el banco para el usuario"},{"fecha":"27-06-2026","placa":"AVC981","nombre":"JOSE LEONARDO SANSON GUERRERO","telefono":3006157292,"email":"leonardosanzon@gmail.com","metodoPago":"TARJETA","monto":1121400,"estado":"RECHAZADO","detalleEstado":"Tarjeta invalida"},{"fecha":"27-06-2026","placa":"HJT113","nombre":"CESAR FABIAN FUENTES GUTIERREZ","telefono":3153384054,"email":"familyfuentesm@gmail.com","metodoPago":"PSE","monto":677400,"estado":"RECHAZADO","detalleEstado":"La transacción supera el monto limite autorizado por el banco para el usuario"},{"fecha":"27-06-2026","placa":"POV216","nombre":"EVELIN JULIETH MEDINA ROJAS","telefono":3214435637,"email":"evelinmedinar@hotmail.com","metodoPago":"PSE","monto":792800,"estado":"RECHAZADO","detalleEstado":"00001-El usuario no acepto o rechazo la transacción en el banco"},{"fecha":"26-06-2026","placa":"DQL183","nombre":"MERY  PARDO HERNANDEZ","telefono":3102534471,"email":"psochamanrique@hotmail.com","metodoPago":"PSE","monto":946600,"estado":"RECHAZADO","detalleEstado":"00015-El usuario no finalizo la transacción en el banco"},{"fecha":"26-06-2026","placa":"VRO19D","nombre":"JAVIER DARIO SALAS MORENO","telefono":3166425374,"email":"salasmoreno82@hotmail.com","metodoPago":"TARJETA","monto":343300,"estado":"RECHAZADO","detalleEstado":"La transacción supera el monto limite para tarjeta de credito establecido por el comercio"},{"fecha":"23-06-2026","placa":"PFY849","nombre":"LUISA FERNANDA RODRIGUEZ SANTOS","telefono":3246873192,"email":"ingluisa@yahoo.com","metodoPago":"PSE","monto":946600,"estado":"RECHAZADO","detalleEstado":"00023-El usuario no finalizo la transacción en PSE"},{"fecha":"22-06-2026","placa":"CYR336","nombre":"LUZ MARINA LIZARAZO FORERO","telefono":3213705343,"email":"lumalizarazo@gmail.com","metodoPago":"PSE","monto":592900,"estado":"RECHAZADO","detalleEstado":"00015-El usuario no finalizo la transacción en el banco"},{"fecha":"19-06-2026","placa":"OXQ68H","nombre":"SANDRA MILENA ARGUELLO PINZON","telefono":3124418366,"email":"sandra.arguello@serviciosbolivar.com","metodoPago":"TARJETA","monto":343300,"estado":"RECHAZADO","detalleEstado":"El banco emisor de la tarjeta no esta soportado por el sistema"},{"fecha":"18-06-2026","placa":"JWZ542","nombre":"NELSON WILLIAM SILVA RUIZ","telefono":3134462295,"email":"nelson.silva@segurosbolivar.com","metodoPago":"PSE","monto":544700,"estado":"EXPIRADA","detalleEstado":"El usuario no acepto o rechazo la transacción en el banco"},{"fecha":"17-06-2026","placa":"OXQ68H","nombre":"SANDRA MILENA ARGUELLO PINZON","telefono":3124418366,"email":"sandra.arguello@serviciosbolivar.com","metodoPago":"","monto":343300,"estado":"EXPIRADA","detalleEstado":"RECHAZADO POR ABANDONO - modificada manualmente por: ferney.mora"},{"fecha":"16-06-2026","placa":"KAM299","nombre":"LUIS ALVEIRO TUMBIA RIAÑO","telefono":3118482606,"email":"Luis.tumbia@segurosbolivar.com","metodoPago":"","monto":677400,"estado":"EXPIRADA","detalleEstado":"Sin detalle"},{"fecha":"12-06-2026","placa":"JWZ542","nombre":"NELSON WILLIAM SILVA RUIZ","telefono":3134462295,"email":"nelson.silva@segurosbolivar.com","metodoPago":"TARJETA","monto":544700,"estado":"RECHAZADO","detalleEstado":"El usuario debe comunicarse con el banco emisor de la tarjeta"},{"fecha":"10-06-2026","placa":"HBV383","nombre":"SANDRA MILENA LOPEZ HERNANDEZ","telefono":3115123932,"email":"sandra.lopez@segurosbolivar.com","metodoPago":"","monto":1017700,"estado":"RECHAZADO","detalleEstado":"Se cambia de estado por abandono - modificada manualmente por: master"},{"fecha":"04-06-2026","placa":"WML942","nombre":"IGTDYC WFTYC CYUF XUFSLYLWV","telefono":3118651776,"email":"andres.tao@segurosbolivar.com","metodoPago":"PSE","monto":352000,"estado":"RECHAZADO","detalleEstado":"El usuario no acepto o rechazo la transacción en el banco"}],"metricas":{"totalExitosas":107,"montoTotal":72068800,"noExitosas":64,"ticketPromedio":673540,"af":{"count":11,"monto":7445400},"mb":{"count":96,"monto":64623400}},"ventasDiarias":[{"dia":"09-06-2026","txns":2,"monto":1289900},{"dia":"10-06-2026","txns":3,"monto":1669400},{"dia":"16-06-2026","txns":1,"monto":792800},{"dia":"17-06-2026","txns":3,"monto":2403400},{"dia":"19-06-2026","txns":2,"monto":1289900},{"dia":"20-06-2026","txns":1,"monto":343300},{"dia":"21-06-2026","txns":1,"monto":343300},{"dia":"22-06-2026","txns":1,"monto":343300},{"dia":"23-06-2026","txns":1,"monto":946600},{"dia":"24-06-2026","txns":1,"monto":946600},{"dia":"25-06-2026","txns":2,"monto":1354800},{"dia":"26-06-2026","txns":3,"monto":2343500},{"dia":"27-06-2026","txns":1,"monto":592900},{"dia":"28-06-2026","txns":3,"monto":2487900},{"dia":"30-06-2026","txns":2,"monto":1104700},{"dia":"01-07-2026","txns":2,"monto":1020700},{"dia":"02-07-2026","txns":3,"monto":1882800},{"dia":"03-07-2026","txns":5,"monto":3341100},{"dia":"04-07-2026","txns":5,"monto":2920200},{"dia":"05-07-2026","txns":2,"monto":1666100},{"dia":"06-07-2026","txns":4,"monto":1847300},{"dia":"07-07-2026","txns":4,"monto":3723000},{"dia":"08-07-2026","txns":7,"monto":5109500},{"dia":"09-07-2026","txns":3,"monto":2330100},{"dia":"10-07-2026","txns":1,"monto":677400},{"dia":"11-07-2026","txns":1,"monto":1017700},{"dia":"14-07-2026","txns":1,"monto":946600},{"dia":"15-07-2026","txns":2,"monto":1893200},{"dia":"16-07-2026","txns":3,"monto":1808000},{"dia":"17-07-2026","txns":2,"monto":1137600},{"dia":"18-07-2026","txns":1,"monto":946600},{"dia":"19-07-2026","txns":1,"monto":256200},{"dia":"21-07-2026","txns":1,"monto":447300},{"dia":"23-07-2026","txns":2,"monto":1491300},{"dia":"24-07-2026","txns":4,"monto":2913900},{"dia":"25-07-2026","txns":2,"monto":1666100},{"dia":"26-07-2026","txns":1,"monto":677400},{"dia":"27-07-2026","txns":5,"monto":3426800},{"dia":"28-07-2026","txns":4,"monto":2310600},{"dia":"30-07-2026","txns":2,"monto":1354300},{"dia":"31-07-2026","txns":3,"monto":1231300},{"dia":"01-08-2026","txns":4,"monto":2650500},{"dia":"02-08-2026","txns":2,"monto":790600},{"dia":"03-08-2026","txns":3,"monto":2332300}],"txnDiariasTodas":[{"dia":"04-06-2026","APROBADO":0,"RECHAZADO":1,"EXPIRADA":0,"INTENTADO":0},{"dia":"09-06-2026","APROBADO":2,"RECHAZADO":0,"EXPIRADA":0,"INTENTADO":0},{"dia":"10-06-2026","APROBADO":3,"RECHAZADO":1,"EXPIRADA":0,"INTENTADO":0},{"dia":"12-06-2026","APROBADO":0,"RECHAZADO":1,"EXPIRADA":0,"INTENTADO":0},{"dia":"16-06-2026","APROBADO":1,"RECHAZADO":0,"EXPIRADA":1,"INTENTADO":0},{"dia":"17-06-2026","APROBADO":3,"RECHAZADO":0,"EXPIRADA":1,"INTENTADO":0},{"dia":"18-06-2026","APROBADO":0,"RECHAZADO":0,"EXPIRADA":1,"INTENTADO":0},{"dia":"19-06-2026","APROBADO":2,"RECHAZADO":1,"EXPIRADA":0,"INTENTADO":0},{"dia":"20-06-2026","APROBADO":1,"RECHAZADO":0,"EXPIRADA":0,"INTENTADO":0},{"dia":"21-06-2026","APROBADO":1,"RECHAZADO":0,"EXPIRADA":0,"INTENTADO":0},{"dia":"22-06-2026","APROBADO":1,"RECHAZADO":1,"EXPIRADA":0,"INTENTADO":0},{"dia":"23-06-2026","APROBADO":1,"RECHAZADO":1,"EXPIRADA":0,"INTENTADO":0},{"dia":"24-06-2026","APROBADO":1,"RECHAZADO":0,"EXPIRADA":0,"INTENTADO":0},{"dia":"25-06-2026","APROBADO":2,"RECHAZADO":0,"EXPIRADA":0,"INTENTADO":0},{"dia":"26-06-2026","APROBADO":3,"RECHAZADO":2,"EXPIRADA":0,"INTENTADO":0},{"dia":"27-06-2026","APROBADO":1,"RECHAZADO":5,"EXPIRADA":0,"INTENTADO":0},{"dia":"28-06-2026","APROBADO":3,"RECHAZADO":1,"EXPIRADA":0,"INTENTADO":0},{"dia":"30-06-2026","APROBADO":2,"RECHAZADO":0,"EXPIRADA":0,"INTENTADO":1},{"dia":"01-07-2026","APROBADO":2,"RECHAZADO":1,"EXPIRADA":0,"INTENTADO":1},{"dia":"02-07-2026","APROBADO":3,"RECHAZADO":1,"EXPIRADA":0,"INTENTADO":0},{"dia":"03-07-2026","APROBADO":5,"RECHAZADO":2,"EXPIRADA":0,"INTENTADO":0},{"dia":"04-07-2026","APROBADO":5,"RECHAZADO":2,"EXPIRADA":0,"INTENTADO":0},{"dia":"05-07-2026","APROBADO":2,"RECHAZADO":0,"EXPIRADA":0,"INTENTADO":0},{"dia":"06-07-2026","APROBADO":4,"RECHAZADO":1,"EXPIRADA":0,"INTENTADO":0},{"dia":"07-07-2026","APROBADO":4,"RECHAZADO":1,"EXPIRADA":0,"INTENTADO":0},{"dia":"08-07-2026","APROBADO":7,"RECHAZADO":0,"EXPIRADA":0,"INTENTADO":0},{"dia":"09-07-2026","APROBADO":3,"RECHAZADO":0,"EXPIRADA":0,"INTENTADO":0},{"dia":"10-07-2026","APROBADO":1,"RECHAZADO":0,"EXPIRADA":0,"INTENTADO":0},{"dia":"11-07-2026","APROBADO":1,"RECHAZADO":0,"EXPIRADA":0,"INTENTADO":0},{"dia":"14-07-2026","APROBADO":1,"RECHAZADO":0,"EXPIRADA":0,"INTENTADO":0},{"dia":"15-07-2026","APROBADO":2,"RECHAZADO":2,"EXPIRADA":0,"INTENTADO":0},{"dia":"16-07-2026","APROBADO":3,"RECHAZADO":1,"EXPIRADA":0,"INTENTADO":0},{"dia":"17-07-2026","APROBADO":2,"RECHAZADO":2,"EXPIRADA":0,"INTENTADO":0},{"dia":"18-07-2026","APROBADO":1,"RECHAZADO":0,"EXPIRADA":0,"INTENTADO":0},{"dia":"19-07-2026","APROBADO":1,"RECHAZADO":4,"EXPIRADA":0,"INTENTADO":2},{"dia":"20-07-2026","APROBADO":0,"RECHAZADO":1,"EXPIRADA":0,"INTENTADO":0},{"dia":"21-07-2026","APROBADO":1,"RECHAZADO":0,"EXPIRADA":0,"INTENTADO":0},{"dia":"22-07-2026","APROBADO":0,"RECHAZADO":2,"EXPIRADA":0,"INTENTADO":0},{"dia":"23-07-2026","APROBADO":2,"RECHAZADO":4,"EXPIRADA":2,"INTENTADO":0},{"dia":"24-07-2026","APROBADO":4,"RECHAZADO":1,"EXPIRADA":0,"INTENTADO":0},{"dia":"25-07-2026","APROBADO":2,"RECHAZADO":2,"EXPIRADA":0,"INTENTADO":0},{"dia":"26-07-2026","APROBADO":1,"RECHAZADO":0,"EXPIRADA":0,"INTENTADO":0},{"dia":"27-07-2026","APROBADO":5,"RECHAZADO":3,"EXPIRADA":0,"INTENTADO":0},{"dia":"28-07-2026","APROBADO":4,"RECHAZADO":1,"EXPIRADA":0,"INTENTADO":0},{"dia":"29-07-2026","APROBADO":0,"RECHAZADO":1,"EXPIRADA":0,"INTENTADO":0},{"dia":"30-07-2026","APROBADO":2,"RECHAZADO":0,"EXPIRADA":0,"INTENTADO":0},{"dia":"31-07-2026","APROBADO":3,"RECHAZADO":3,"EXPIRADA":0,"INTENTADO":0},{"dia":"01-08-2026","APROBADO":4,"RECHAZADO":0,"EXPIRADA":0,"INTENTADO":0},{"dia":"02-08-2026","APROBADO":2,"RECHAZADO":0,"EXPIRADA":0,"INTENTADO":0},{"dia":"03-08-2026","APROBADO":3,"RECHAZADO":1,"EXPIRADA":0,"INTENTADO":0}],"ventasSemanales":[{"label":"8/6","txns":5,"monto":2959300},{"label":"15/6","txns":7,"monto":4829400},{"label":"22/6","txns":10,"monto":6871000},{"label":"29/6","txns":20,"monto":12757400},{"label":"6/7","txns":22,"monto":16371100},{"label":"13/7","txns":9,"monto":6732000},{"label":"20/7","txns":10,"monto":6774800},{"label":"27/7","txns":19,"monto":11650900},{"label":"3/8","txns":5,"monto":3122900}],"ventasMensuales":[{"key":"2026-06","nombre":"junio de 2026","txns":27,"monto":18252300},{"key":"2026-07","nombre":"julio de 2026","txns":71,"monto":48043100},{"key":"2026-08","nombre":"agosto de 2026","txns":9,"monto":5773400}],"metodos":{"PSE":{"txns":68,"monto":41943400},"TARJETA":{"txns":39,"monto":30125400}},"bancos":{"BANCOLOMBIA":25,"DAVIBANK":7,"BANCO DAVIVIENDA":25,"BANCO DE BOGOTA":5,"NUBANK":7,"BANCO DAVIVIENDA, S.A.":11,"NEQUI":6,"BANCO AV VILLAS":1,"BANCO ITAU":1,"NU":1,"BCSC":2,"RAPPIPAY":1,"FALABELLA":1,"SERFINANSA":2,"BANCO CAJA SOCIAL":3,"BANCO BBVA COLOMBIA S.A.":3,"BANCO CORPBANCA S.A":2,"DAVIPLATA":2,"BBVA BANCO GANADERO, S.A.":1,"BANCO FALABELLA ":1},"motivos":{"La tarjeta no existe":1,"Usuario no completo":25,"Saldo insuficiente en la cuenta bancaria del usuario":1,"Cuenta/Tarjeta invalida":4,"Sin detalle":11,"00011-Saldo insuficiente en la cuenta bancaria del usuario":1,"Datos de acceso al banco inválidos":1,"04-(FAIL_BANKNOTEXISTSORDISABLED) PSE no se encuentra disponible para iniciar la transacción":1,"Transacción declinada por el preautorizador del banco":4,"La tarjeta del usuario esta vencida":1,"Transacción Rechazada por políticas de la franquicia, intente más tarde.":1,"00004-La cuenta bancaria del usuario no existe":2,"Saldo insuficiente en la tarjeta":1,"El banco emisor de la tarjeta no esta soportado por el sistema":2,"Supera monto limite":4,"Transaccion fallida":1,"RECHAZADO POR ABANDONO - modificada manualmente por: ferney.mora":1,"El usuario debe comunicarse con el banco emisor de la tarjeta":1,"Se cambia de estado por abandono - modificada manualmente por: master":1},"multiIntentos":[{"placa":"PHL437","nombre":"MAURICIO  CADAVID BORDA","intentos":2,"logroPagar":true},{"placa":"DZA85H","nombre":"DAIRO DARIO JULIO LOPEZ","intentos":3,"logroPagar":false},{"placa":"GIN099","nombre":"MILLER   SAA","intentos":3,"logroPagar":false},{"placa":"PGR165","nombre":"CARLOS ANDRES NIÑO PIRAJAN","intentos":2,"logroPagar":false},{"placa":"DAF617","nombre":"ALEXANDER  LOPEZ PIÑERES","intentos":3,"logroPagar":false},{"placa":"GCN906","nombre":"ANDRES CAMILO TAO ROMERO","intentos":3,"logroPagar":true},{"placa":"HVM384","nombre":"RICARDO  MARTINEZ RICARDO","intentos":2,"logroPagar":true},{"placa":"FZQ973","nombre":"LUIS HERNANDO LEON BUSTOS","intentos":2,"logroPagar":false},{"placa":"IXT184","nombre":"GILBERTO  VELOZA SOSA","intentos":2,"logroPagar":true},{"placa":"HJT113","nombre":"CESAR FABIAN FUENTES GUTIERREZ","intentos":3,"logroPagar":false},{"placa":"OXQ68H","nombre":"SANDRA MILENA ARGUELLO PINZON","intentos":2,"logroPagar":false},{"placa":"JWZ542","nombre":"NELSON WILLIAM SILVA RUIZ","intentos":2,"logroPagar":false}],"pruebas":[{"fecha":"27-07-2026","nombre":"KAREN PRUEBAS","monto":1,"razon":"Sin placa"},{"fecha":"16-06-2026","nombre":"Karen Pulido","monto":2,"razon":"Sin placa"},{"fecha":"16-06-2026","nombre":"Karen Pulido","monto":2,"razon":"Sin placa"},{"fecha":"11-06-2026","nombre":"Karen Pulido","monto":2,"razon":"Sin placa"},{"fecha":"10-06-2026","nombre":"Valeria Munoz Quiroga","monto":10,"razon":"Sin placa"},{"fecha":"10-06-2026","nombre":"Valeria Munoz Quiroga","monto":1000,"razon":"Sin placa"},{"fecha":"02-06-2026","nombre":"Valeria Munoz Quiroga","monto":152,"razon":"Sin placa"},{"fecha":"02-06-2026","nombre":"Valeria Munoz Quiroga","monto":150,"razon":"Sin placa"},{"fecha":"02-06-2026","nombre":"Valeria Munoz Quiroga","monto":4544,"razon":"Sin placa"}],"generatedAt":"2026-08-03T21:46:26.485Z"};
+</script>
+<script>
+(function(){
+    Chart.register(ChartDataLabels);
+    var d=DATA, m=d.metricas;
+    function fmt(n){return '$'+Number(n).toLocaleString('es-CO');}
+    function bm(mp){return mp==='PSE'?'badge-pse':mp==='TARJETA'?'badge-card':'badge-daviplata';}
+    var h='';
 
-// === CARGAR DATOS GUARDADOS AL INICIAR ===
-(function loadSavedData() {
-    var saved = localStorage.getItem(STORAGE_KEY);
-    var savedDate = localStorage.getItem(STORAGE_DATE_KEY);
-    if (saved) {
-        try {
-            var rawData = JSON.parse(saved);
-            document.getElementById('headerSubtitle').innerHTML = 'Ultima actualizacion: <strong>' + savedDate + '</strong>';
-            document.getElementById('btnReload').style.display = 'inline-block';
-            document.getElementById('reloadFileInput').addEventListener('change', function(e) { handleFile(e.target.files[0]); });
-            document.getElementById('uploadZone').style.display = 'none';
-            processData(rawData);
-        } catch(e) { console.error('Error cargando datos guardados:', e); }
+    // KPIs
+    h+='<div class="metrics-grid">';
+    h+='<div class="metric-card success"><div class="value">'+m.totalExitosas+'</div><div class="label">Ventas Exitosas</div></div>';
+    h+='<div class="metric-card info"><div class="value">'+fmt(m.montoTotal)+'</div><div class="label">Monto Total</div></div>';
+    h+='<div class="metric-card danger"><div class="value">'+m.noExitosas+'</div><div class="label">No Exitosas</div></div>';
+    h+='<div class="metric-card info"><div class="value">'+fmt(m.ticketPromedio)+'</div><div class="label">Ticket Promedio</div></div>';
+    h+='</div>';
+
+    // Charts placeholders
+    h+='<div class="charts-grid"><div class="chart-container"><h3>Ventas Diarias (Monto)</h3><canvas id="cD"></canvas></div><div class="chart-container"><h3>Ventas Semanales (Monto)</h3><canvas id="cS"></canvas></div></div>';
+    h+='<div class="charts-grid"><div class="chart-container"><h3>Ventas Diarias (Cantidad)</h3><canvas id="cDC"></canvas></div><div class="chart-container"><h3>Ventas Semanales (Cantidad)</h3><canvas id="cSC"></canvas></div></div>';
+    h+='<div class="chart-container" style="margin-bottom:1.5rem;border:1px solid #e8ecf0"><h3>Transacciones Diarias — Todos los Estados</h3><canvas id="cDT" height="80"></canvas></div>';
+    if(d.ventasMensuales.length>1){h+='<div class="charts-grid"><div class="chart-container"><h3>Comparativo Mensual (Cant)</h3><canvas id="cMC"></canvas></div><div class="chart-container"><h3>Comparativo Mensual (Monto)</h3><canvas id="cMM"></canvas></div></div>';}
+    h+='<div class="charts-grid"><div class="chart-container"><h3>Metodo de Pago</h3><canvas id="cMP"></canvas></div><div class="chart-container"><h3>Motivos de Rechazo</h3><canvas id="cR"></canvas></div></div>';
+
+    // Fase
+    h+='<div class="section"><h2>Resumen por Fase</h2><table><thead><tr><th>Fase</th><th>Txns</th><th>Monto</th><th>Ticket</th></tr></thead><tbody>';
+    h+='<tr><td><span class="fase-tag fase-af">Amigos y Familia</span></td><td>'+m.af.count+'</td><td>'+fmt(m.af.monto)+'</td><td>'+fmt(m.af.count?Math.round(m.af.monto/m.af.count):0)+'</td></tr>';
+    h+='<tr><td><span class="fase-tag fase-mb">Marcha Blanca</span></td><td>'+m.mb.count+'</td><td>'+fmt(m.mb.monto)+'</td><td>'+fmt(m.mb.count?Math.round(m.mb.monto/m.mb.count):0)+'</td></tr>';
+    h+='<tr style="font-weight:700"><td>Total</td><td>'+m.totalExitosas+'</td><td>'+fmt(m.montoTotal)+'</td><td>'+fmt(m.ticketPromedio)+'</td></tr>';
+    h+='</tbody></table></div>';
+
+    // Diario tabla
+    h+='<div class="section"><h2>Detalle Diario</h2><table><thead><tr><th>Fecha</th><th>Txns</th><th>Monto</th></tr></thead><tbody>';
+    d.ventasDiarias.forEach(function(v){h+='<tr><td>'+v.dia+'</td><td>'+v.txns+'</td><td>'+fmt(v.monto)+'</td></tr>';});
+    h+='</tbody></table></div>';
+
+    // Metodos tabla
+    h+='<div class="section"><h2>Metodo de Pago</h2><table><thead><tr><th>Metodo</th><th>Txns</th><th>Monto</th><th>%</th></tr></thead><tbody>';
+    Object.keys(d.metodos).sort(function(a,b){return d.metodos[b].monto-d.metodos[a].monto;}).forEach(function(k){
+        h+='<tr><td><span class="badge '+bm(k)+'">'+k+'</span></td><td>'+d.metodos[k].txns+'</td><td>'+fmt(d.metodos[k].monto)+'</td><td>'+((d.metodos[k].monto/m.montoTotal)*100).toFixed(1)+'%</td></tr>';
+    });
+    h+='</tbody></table></div>';
+
+    // Bancos
+    h+='<div class="section"><h2>Bancos</h2><table><thead><tr><th>Banco</th><th>Txns</th><th>%</th></tr></thead><tbody>';
+    Object.keys(d.bancos).sort(function(a,b){return d.bancos[b]-d.bancos[a];}).forEach(function(b){
+        h+='<tr><td>'+b+'</td><td>'+d.bancos[b]+'</td><td>'+((d.bancos[b]/m.totalExitosas)*100).toFixed(1)+'%</td></tr>';
+    });
+    h+='</tbody></table></div>';
+
+    // No exitosas
+    h+='<div class="section"><div class="section-header"><h2>No Exitosas</h2><button class="btn-download" onclick="dlXls(\'no\')">Excel</button></div><table><thead><tr><th>Fecha</th><th>Placa</th><th>Nombre</th><th>Metodo</th><th>Monto</th><th>Estado</th><th>Motivo</th></tr></thead><tbody>';
+    d.noExitosas.forEach(function(r){
+        var bc=r.estado==='RECHAZADO'?'badge-danger':'badge-warning';
+        h+='<tr><td>'+r.fecha+'</td><td>'+r.placa+'</td><td>'+r.nombre+'</td><td><span class="badge '+bm(r.metodoPago)+'">'+r.metodoPago+'</span></td><td>'+fmt(r.monto)+'</td><td><span class="badge '+bc+'">'+r.estado+'</span></td><td style="font-size:.8rem">'+r.detalleEstado+'</td></tr>';
+    });
+    h+='</tbody></table>';
+    h+='<h3>Motivos</h3><table><thead><tr><th>Motivo</th><th>Cant</th></tr></thead><tbody>';
+    Object.keys(d.motivos).sort(function(a,b){return d.motivos[b]-d.motivos[a];}).forEach(function(k){h+='<tr><td>'+k+'</td><td>'+d.motivos[k]+'</td></tr>';});
+    h+='</tbody></table>';
+    if(d.multiIntentos.length>0){
+        h+='<h3>Multiples Intentos</h3><table><thead><tr><th>Placa</th><th>Nombre</th><th>Intentos</th><th>Pago?</th></tr></thead><tbody>';
+        d.multiIntentos.forEach(function(mi){var bc2=mi.logroPagar?'badge-success':'badge-danger';h+='<tr><td>'+mi.placa+'</td><td>'+mi.nombre+'</td><td>'+mi.intentos+'</td><td><span class="badge '+bc2+'">'+(mi.logroPagar?'Si':'No')+'</span></td></tr>';});
+        h+='</tbody></table>';
     }
+    h+='</div>';
+
+    // Exitosas detalle
+    h+='<div class="section"><div class="section-header"><h2>Ventas Exitosas</h2><button class="btn-download" onclick="dlXls(\'si\')">Excel</button></div><table><thead><tr><th>#</th><th>Fecha</th><th>Fase</th><th>Placa</th><th>Nombre</th><th>Metodo</th><th>Banco</th><th>Monto</th></tr></thead><tbody>';
+    d.exitosas.forEach(function(r,i){
+        var ft=r.fase==='AF'?'<span class="fase-tag fase-af">A&F</span>':'<span class="fase-tag fase-mb">MB</span>';
+        h+='<tr><td>'+(i+1)+'</td><td>'+r.fecha+'</td><td>'+ft+'</td><td><b>'+r.placa+'</b></td><td>'+r.nombre+'</td><td><span class="badge '+bm(r.metodoPago)+'">'+r.metodoPago+'</span></td><td style="font-size:.8rem">'+r.banco+'</td><td>'+fmt(r.monto)+'</td></tr>';
+    });
+    h+='</tbody></table></div>';
+
+    // Pruebas
+    if(d.pruebas.length>0){
+        h+='<div class="section"><h2>Excluidas (Pruebas)</h2><table><thead><tr><th>Fecha</th><th>Nombre</th><th>Monto</th><th>Razon</th></tr></thead><tbody>';
+        d.pruebas.forEach(function(r){h+='<tr><td>'+r.fecha+'</td><td>'+r.nombre+'</td><td>'+fmt(r.monto)+'</td><td>'+r.razon+'</td></tr>';});
+        h+='</tbody></table></div>';
+    }
+
+    document.getElementById('app').innerHTML=h;
+</script>
+<script>
+(function(){
+    var d=DATA;
+    setTimeout(function(){
+        // Diario monto
+        new Chart(document.getElementById('cD'),{type:'bar',data:{labels:d.ventasDiarias.map(function(v){var p=v.dia.split('-');return p[0]+'/'+p[1];}),datasets:[{data:d.ventasDiarias.map(function(v){return v.monto;}),backgroundColor:'#06b6d4',borderRadius:4}]},options:{responsive:true,plugins:{legend:{display:false},datalabels:{anchor:'end',align:'top',color:'#475569',font:{size:9,weight:'bold'},rotation:-90,formatter:function(v){return '$'+(v/1000000).toFixed(1)+'M';}}},scales:{x:{ticks:{maxRotation:60,minRotation:45,font:{size:10}}},y:{beginAtZero:true,ticks:{callback:function(v){return '$'+(v/1000000).toFixed(1)+'M';}}}}}});
+
+        // Semanal monto
+        new Chart(document.getElementById('cS'),{type:'line',data:{labels:d.ventasSemanales.map(function(v){return v.label;}),datasets:[{data:d.ventasSemanales.map(function(v){return v.monto;}),borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,0.1)',fill:true,tension:0.3,pointRadius:6}]},options:{responsive:true,plugins:{legend:{display:false},datalabels:{anchor:'end',align:'top',color:'#1e40af',font:{size:9,weight:'bold'},formatter:function(v){return '$'+(v/1000000).toFixed(1)+'M';}}},scales:{y:{ticks:{callback:function(v){return '$'+(v/1000000).toFixed(1)+'M';}}}}}});
+
+        // Diario cantidad
+        new Chart(document.getElementById('cDC'),{type:'bar',data:{labels:d.ventasDiarias.map(function(v){var p=v.dia.split('-');return p[0]+'/'+p[1];}),datasets:[{data:d.ventasDiarias.map(function(v){return v.txns;}),backgroundColor:'#06b6d4',borderRadius:4}]},options:{responsive:true,plugins:{legend:{display:false},datalabels:{anchor:'end',align:'top',color:'#475569',font:{size:11,weight:'bold'}}},scales:{x:{ticks:{maxRotation:60,minRotation:45}},y:{ticks:{stepSize:1}}}}});
+
+        // Semanal cantidad
+        new Chart(document.getElementById('cSC'),{type:'line',data:{labels:d.ventasSemanales.map(function(v){return v.label;}),datasets:[{data:d.ventasSemanales.map(function(v){return v.txns;}),borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,0.1)',fill:true,tension:0.3,pointRadius:6}]},options:{responsive:true,plugins:{legend:{display:false},datalabels:{anchor:'end',align:'top',color:'#92400e',font:{size:9,weight:'bold'}}},scales:{y:{ticks:{stepSize:1}}}}});
+
+        // Todos estados apilada
+        new Chart(document.getElementById('cDT'),{type:'bar',data:{labels:d.txnDiariasTodas.map(function(v){var p=v.dia.split('-');return p[0]+'/'+p[1];}),datasets:[{label:'Aprobadas',data:d.txnDiariasTodas.map(function(v){return v.APROBADO;}),backgroundColor:'#059669',borderRadius:3},{label:'Rechazadas',data:d.txnDiariasTodas.map(function(v){return v.RECHAZADO;}),backgroundColor:'#dc2626',borderRadius:3},{label:'Expiradas',data:d.txnDiariasTodas.map(function(v){return v.EXPIRADA;}),backgroundColor:'#f59e0b',borderRadius:3},{label:'Intentadas',data:d.txnDiariasTodas.map(function(v){return v.INTENTADO;}),backgroundColor:'#94a3b8',borderRadius:3}]},options:{responsive:true,plugins:{legend:{position:'top'},datalabels:{display:function(ctx){return ctx.dataset.data[ctx.dataIndex]>0;},anchor:'center',align:'center',color:'#fff',font:{size:10,weight:'bold'}}},scales:{x:{stacked:true,ticks:{maxRotation:60,minRotation:45}},y:{stacked:true,beginAtZero:true,ticks:{stepSize:1}}}}});
+
+        // Comparativo mensual
+        if(d.ventasMensuales.length>1){
+            var mn=d.ventasMensuales.map(function(v){return v.nombre.charAt(0).toUpperCase()+v.nombre.slice(1);});
+            var cl=['#6366f1','#06b6d4','#10b981','#f59e0b','#ef4444','#8b5cf6'];
+            new Chart(document.getElementById('cMC'),{type:'bar',data:{labels:mn,datasets:[{data:d.ventasMensuales.map(function(v){return v.txns;}),backgroundColor:d.ventasMensuales.map(function(_,i){return cl[i%cl.length];}),borderRadius:6}]},options:{responsive:true,plugins:{legend:{display:false},datalabels:{anchor:'end',align:'top',font:{size:12,weight:'bold'}}},scales:{y:{beginAtZero:true,ticks:{stepSize:5}}}}});
+            new Chart(document.getElementById('cMM'),{type:'bar',data:{labels:mn,datasets:[{data:d.ventasMensuales.map(function(v){return v.monto;}),backgroundColor:d.ventasMensuales.map(function(_,i){return cl[i%cl.length];}),borderRadius:6}]},options:{responsive:true,plugins:{legend:{display:false},datalabels:{anchor:'end',align:'top',font:{size:12,weight:'bold'},formatter:function(v){return '$'+(v/1000000).toFixed(1)+'M';}}},scales:{y:{beginAtZero:true,ticks:{callback:function(v){return '$'+(v/1000000).toFixed(1)+'M';}}}}}});
+        }
+
+        // Metodo de pago
+        var mpK=Object.keys(d.metodos);
+        new Chart(document.getElementById('cMP'),{type:'bar',data:{labels:mpK,datasets:[{data:mpK.map(function(k){return d.metodos[k].monto;}),backgroundColor:['#3b82f6','#a855f7','#f59e0b','#10b981'],borderRadius:6,barThickness:50}]},options:{responsive:true,plugins:{legend:{display:false},datalabels:{anchor:'end',align:'top',font:{size:11,weight:'bold'},formatter:function(v){return '$'+(v/1000000).toFixed(1)+'M';}}},scales:{y:{ticks:{callback:function(v){return '$'+(v/1000000).toFixed(0)+'M';}}}}}});
+
+        // Rechazos
+        var mk=Object.keys(d.motivos).sort(function(a,b){return d.motivos[b]-d.motivos[a];});
+        var mv=mk.map(function(k){return d.motivos[k];});
+        var mc=['#ef4444','#f97316','#eab308','#6366f1','#14b8a6','#ec4899','#8b5cf6'];
+        new Chart(document.getElementById('cR'),{type:'bar',data:{labels:mk.map(function(k){return k.length>30?k.substring(0,30)+'...':k;}),datasets:[{data:mv,backgroundColor:mk.map(function(_,i){return mc[i%mc.length];}),borderRadius:4}]},options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false},datalabels:{anchor:'end',align:'end',font:{size:11,weight:'bold'}}},scales:{x:{ticks:{stepSize:1}},y:{ticks:{font:{size:11}}}}}});
+    },100);
 })();
 
-// === EVENT LISTENERS ===
-const uploadZone = document.getElementById('uploadZone');
-const fileInput = document.getElementById('fileInput');
-
-uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('dragover'); });
-uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
-uploadZone.addEventListener('drop', (e) => { e.preventDefault(); uploadZone.classList.remove('dragover'); handleFile(e.dataTransfer.files[0]); });
-fileInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
-
-function handleFile(file) {
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        const workbook = XLSX.read(e.target.result, { type: 'array' });
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const data = XLSX.utils.sheet_to_json(sheet);
-        // Guardar datos en localStorage para persistencia
-        try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-            localStorage.setItem(STORAGE_DATE_KEY, new Date().toLocaleString('es-CO'));
-        } catch(err) { console.warn('No se pudo guardar en localStorage:', err); }
-        processData(data);
-    };
-    reader.readAsArrayBuffer(file);
-}
-
-function parseDate(dateStr) {
-    if (!dateStr) return null;
-    const parts = dateStr.split(' ')[0].split('-');
-    return new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
-}
-
-function formatMoney(amount) {
-    return '$' + Number(amount).toLocaleString('es-CO');
-}
-
-function extractPlaca(desc) {
-    if (!desc) return null;
-    const match = desc.match(/PLACA:([A-Z0-9]+)/i);
-    return match ? match[1] : null;
-}
-
-function getWeekNumber(date) {
-    const startOfYear = new Date(date.getFullYear(), 0, 1);
-    const days = Math.floor((date - startOfYear) / (24 * 60 * 60 * 1000));
-    return Math.ceil((days + startOfYear.getDay() + 1) / 7);
-}
-
-function processData(rawData) {
-    // Normalizar campos
-    const data = rawData.map(row => ({
-        referencia: row['Referencia De Pago'] || '',
-        email: row['email'] || '',
-        documento: row['Documento'] || '',
-        nombre: row['Nombre'] || '',
-        telefono: row['Teléfono'] || '',
-        descripcion: row['Descripción'] || '',
-        codigoTrazabilidad: row['Código De Trazabilidad'] || '',
-        idTransaccion: row['Id De Transacción'] || '',
-        fecha: row['Fecha'] || '',
-        mes: row['Mes'] || '',
-        metodoPago: row['Método De Pago'] || '',
-        monto: parseInt(row['Monto']) || 0,
-        estado: row['Estado'] || '',
-        detalleEstado: row['Detalle De estado'] || '',
-        banco: row['Banco'] || '',
-        placa: extractPlaca(row['Descripción'] || ''),
-        fechaParsed: parseDate(row['Fecha'] || '')
-    }));
-
-    // Filtrar: solo con placa y excluir pruebas técnicas
-    const conPlaca = data.filter(r => r.placa && !EXCLUIR_MONTOS.includes(r.monto));
-    const pruebas = data.filter(r => !r.placa || EXCLUIR_MONTOS.includes(r.monto));
-
-    const exitosas = conPlaca.filter(r => r.estado === 'APROBADO');
-    const noExitosas = conPlaca.filter(r => r.estado !== 'APROBADO');
-
-    // Clasificar por fase
-    const amigosYFamilia = exitosas.filter(r => r.fechaParsed && r.fechaParsed < FECHA_CORTE);
-    const marchaBlanca = exitosas.filter(r => r.fechaParsed && r.fechaParsed >= FECHA_CORTE);
-
-    generateReport(exitosas, noExitosas, amigosYFamilia, marchaBlanca, pruebas, conPlaca);
-}
-
-function generateReport(exitosas, noExitosas, af, mb, pruebas, todas) {
-    // Guardar referencias globales para descarga Excel
-    window._reportData = { exitosas, noExitosas };
-
-    const totalExitosas = exitosas.reduce((s, r) => s + r.monto, 0);
-    const totalAF = af.reduce((s, r) => s + r.monto, 0);
-    const totalMB = mb.reduce((s, r) => s + r.monto, 0);
-    const tasaConversion = ((exitosas.length / todas.length) * 100).toFixed(1);
-    const ticketPromedio = Math.round(totalExitosas / exitosas.length);
-
-    let html = '';
-
-    // === MÉTRICAS PRINCIPALES ===
-    html += `<div class="metrics-grid">
-        <div class="metric-card success"><div class="value">${exitosas.length}</div><div class="label">Ventas Exitosas</div></div>
-        <div class="metric-card info"><div class="value">${formatMoney(totalExitosas)}</div><div class="label">Monto Total</div></div>
-        <div class="metric-card danger"><div class="value">${noExitosas.length}</div><div class="label">Operaciones No Exitosas</div></div>
-        <div class="metric-card info"><div class="value">${formatMoney(ticketPromedio)}</div><div class="label">Ticket Promedio</div></div>
-    </div>`;;
-
-    // === RESUMEN POR FASE ===
-    // === GRÁFICOS === (se inserta arriba, resumen por fase va después de gráficos)
-    html += `<div class="charts-grid">
-        <div class="chart-container"><h3>Ventas Diarias (Monto)</h3><canvas id="chartDiario"></canvas></div>
-        <div class="chart-container"><h3>Ventas Semanales (Monto)</h3><canvas id="chartSemanal"></canvas></div>
-    </div>
-    <div class="charts-grid">
-        <div class="chart-container"><h3>Ventas Diarias (Cantidad — solo exitosas)</h3><canvas id="chartDiarioCant"></canvas></div>
-        <div class="chart-container"><h3>Ventas Semanales (Cantidad)</h3><canvas id="chartSemanalCant"></canvas></div>
-    </div>
-    <div class="chart-container" style="margin-bottom:1.5rem;border:1px solid #e8ecf0;"><h3>Transacciones Diarias — Todos los Estados (Aprobadas + Rechazadas + Expiradas + Intentadas)</h3><canvas id="chartDiarioTodos" height="80"></canvas></div>
-    <div id="comparativoMensualContainer"></div>
-    <div class="charts-grid">
-        <div class="chart-container" style="max-width:400px;"><h3>Método de Pago</h3><canvas id="chartMetodo"></canvas></div>
-        <div class="chart-container"><h3>Motivos de Rechazo</h3><canvas id="chartRechazos"></canvas></div>
-    </div>`;
-
-    // === RESUMEN POR FASE ===
-    html += `<div class="section"><h2>Resumen por Fase</h2>
-        <table><thead><tr><th>Fase</th><th>Transacciones</th><th>Monto</th><th>Ticket Promedio</th></tr></thead><tbody>
-        <tr><td><span class="fase-tag fase-af">Amigos y Familia</span> (antes del 20 jun)</td><td>${af.length}</td><td>${formatMoney(totalAF)}</td><td>${formatMoney(af.length ? Math.round(totalAF / af.length) : 0)}</td></tr>
-        <tr><td><span class="fase-tag fase-mb">Marcha Blanca</span> (20 jun en adelante)</td><td>${mb.length}</td><td>${formatMoney(totalMB)}</td><td>${formatMoney(mb.length ? Math.round(totalMB / mb.length) : 0)}</td></tr>
-        <tr style="font-weight:700;"><td>Total</td><td>${exitosas.length}</td><td>${formatMoney(totalExitosas)}</td><td>${formatMoney(ticketPromedio)}</td></tr>
-        </tbody></table></div>`;
-
-    // === VENTAS DIARIAS ===
-    const ventasDiarias = {};
-    exitosas.forEach(r => {
-        const key = r.fecha.split(' ')[0];
-        if (!ventasDiarias[key]) ventasDiarias[key] = { txns: 0, monto: 0, placas: [] };
-        ventasDiarias[key].txns++;
-        ventasDiarias[key].monto += r.monto;
-        ventasDiarias[key].placas.push(r.placa);
-    });
-
-    const diasOrdenados = Object.keys(ventasDiarias).sort((a, b) => {
-        const pa = a.split('-'); const pb = b.split('-');
-        return new Date(pa[2], pa[1]-1, pa[0]) - new Date(pb[2], pb[1]-1, pb[0]);
-    });
-
-    // === TRANSACCIONES DIARIAS POR ESTADO (TODAS) ===
-    const txnDiariasTodas = {};
-    todas.forEach(r => {
-        const key = r.fecha.split(' ')[0];
-        if (!txnDiariasTodas[key]) txnDiariasTodas[key] = { APROBADO: 0, RECHAZADO: 0, EXPIRADA: 0, INTENTADO: 0 };
-        const estado = r.estado || 'INTENTADO';
-        if (txnDiariasTodas[key][estado] !== undefined) {
-            txnDiariasTodas[key][estado]++;
-        }
-    });
-    const diasTodosOrdenados = Object.keys(txnDiariasTodas).sort((a, b) => {
-        const pa = a.split('-'); const pb = b.split('-');
-        return new Date(pa[2], pa[1]-1, pa[0]) - new Date(pb[2], pb[1]-1, pb[0]);
-    });
-
-    html += `<div class="section"><h2>Ventas Exitosas — Detalle Diario</h2><table>
-        <thead><tr><th>Fecha</th><th>Fase</th><th>Txns</th><th>Monto</th><th>Placas</th></tr></thead><tbody>`;
-    diasOrdenados.forEach(dia => {
-        const d = ventasDiarias[dia];
-        const parts = dia.split('-');
-        const dateObj = new Date(parts[2], parts[1]-1, parts[0]);
-        const fase = dateObj < FECHA_CORTE ? '<span class="fase-tag fase-af">A&F</span>' : '<span class="fase-tag fase-mb">MB</span>';
-        html += `<tr><td>${dia}</td><td>${fase}</td><td>${d.txns}</td><td>${formatMoney(d.monto)}</td><td>${d.placas.join(', ')}</td></tr>`;
-    });
-    html += `</tbody></table></div>`;
-
-    // === VENTAS SEMANALES ===
-    const ventasSemanales = {};
-    exitosas.forEach(r => {
-        if (!r.fechaParsed) return;
-        const monday = new Date(r.fechaParsed);
-        monday.setDate(monday.getDate() - monday.getDay() + 1);
-        const key = `${monday.getDate().toString().padStart(2,'0')}-${(monday.getMonth()+1).toString().padStart(2,'0')}`;
-        if (!ventasSemanales[key]) ventasSemanales[key] = { start: new Date(monday), txns: 0, monto: 0 };
-        ventasSemanales[key].txns++;
-        ventasSemanales[key].monto += r.monto;
-    });
-
-    const semanasOrdenadas = Object.keys(ventasSemanales).sort((a, b) => ventasSemanales[a].start - ventasSemanales[b].start);
-
-    html += `<div class="section"><h2>Ventas Exitosas — Detalle Semanal</h2><table>
-        <thead><tr><th>Semana (inicio lunes)</th><th>Transacciones</th><th>Monto</th><th>Promedio/Txn</th></tr></thead><tbody>`;
-    semanasOrdenadas.forEach(key => {
-        const s = ventasSemanales[key];
-        const fin = new Date(s.start); fin.setDate(fin.getDate() + 6);
-        const rangoStr = `${s.start.getDate().toString().padStart(2,'0')}/${(s.start.getMonth()+1).toString().padStart(2,'0')} – ${fin.getDate().toString().padStart(2,'0')}/${(fin.getMonth()+1).toString().padStart(2,'0')}`;
-        html += `<tr><td>${rangoStr}</td><td>${s.txns}</td><td>${formatMoney(s.monto)}</td><td>${formatMoney(Math.round(s.monto / s.txns))}</td></tr>`;
-    });
-    html += `</tbody></table></div>`;
-
-    // === VENTAS MENSUALES ===
-    const ventasMensuales = {};
-    exitosas.forEach(r => {
-        if (!r.fechaParsed) return;
-        const mesKey = `${r.fechaParsed.getFullYear()}-${(r.fechaParsed.getMonth()+1).toString().padStart(2,'0')}`;
-        const mesNombre = r.fechaParsed.toLocaleString('es-CO', { month: 'long', year: 'numeric' });
-        if (!ventasMensuales[mesKey]) ventasMensuales[mesKey] = { nombre: mesNombre, txns: 0, monto: 0, fechaInicio: r.fechaParsed, fechaFin: r.fechaParsed };
-        ventasMensuales[mesKey].txns++;
-        ventasMensuales[mesKey].monto += r.monto;
-        if (r.fechaParsed < ventasMensuales[mesKey].fechaInicio) ventasMensuales[mesKey].fechaInicio = r.fechaParsed;
-        if (r.fechaParsed > ventasMensuales[mesKey].fechaFin) ventasMensuales[mesKey].fechaFin = r.fechaParsed;
-    });
-
-    const mesesOrdenados = Object.keys(ventasMensuales).sort();
-
-    // === MEDIO DE PAGO ===
-    const metodos = {};
-    exitosas.forEach(r => {
-        if (!metodos[r.metodoPago]) metodos[r.metodoPago] = { txns: 0, monto: 0 };
-        metodos[r.metodoPago].txns++;
-        metodos[r.metodoPago].monto += r.monto;
-    });
-
-    html += `<div class="section"><h2>Distribución por Método de Pago (Exitosas)</h2><table>
-        <thead><tr><th>Método</th><th>Transacciones</th><th>Monto</th><th>% del Total</th></tr></thead><tbody>`;
-    Object.keys(metodos).sort((a,b) => metodos[b].monto - metodos[a].monto).forEach(m => {
-        const badgeClass = m === 'PSE' ? 'badge-pse' : m === 'TARJETA' ? 'badge-card' : 'badge-daviplata';
-        html += `<tr><td><span class="badge ${badgeClass}">${m}</span></td><td>${metodos[m].txns}</td><td>${formatMoney(metodos[m].monto)}</td><td>${((metodos[m].monto/totalExitosas)*100).toFixed(1)}%</td></tr>`;
-    });
-    html += `</tbody></table></div>`;
-
-    // === BANCOS ===
-    const bancos = {};
-    exitosas.forEach(r => {
-        const banco = r.banco || 'Sin info';
-        if (!bancos[banco]) bancos[banco] = 0;
-        bancos[banco]++;
-    });
-
-    html += `<div class="section"><h2>Distribución por Banco (Exitosas)</h2><table>
-        <thead><tr><th>Banco</th><th>Transacciones</th><th>%</th></tr></thead><tbody>`;
-    Object.keys(bancos).sort((a,b) => bancos[b] - bancos[a]).forEach(b => {
-        html += `<tr><td>${b}</td><td>${bancos[b]}</td><td>${((bancos[b]/exitosas.length)*100).toFixed(1)}%</td></tr>`;
-    });
-    html += `</tbody></table></div>`;
-
-    // === OPERACIONES NO EXITOSAS ===
-    html += `<div class="section"><div class="section-header"><h2>Operaciones No Exitosas</h2><button class="btn-download" onclick="downloadExcel('noExitosas')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Descargar Excel</button></div><table>
-        <thead><tr><th>Fecha</th><th>Placa</th><th>Nombre</th><th>Celular</th><th>Correo</th><th>Método</th><th>Monto</th><th>Estado</th><th>Motivo</th></tr></thead><tbody>`;
-    noExitosas.sort((a,b) => (b.fechaParsed||0) - (a.fechaParsed||0)).forEach(r => {
-        const badgeState = r.estado === 'RECHAZADO' ? 'badge-danger' : 'badge-warning';
-        html += `<tr><td>${r.fecha.split(' ')[0]}</td><td>${r.placa}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;">${r.nombre.split(' ').slice(0, 4).join(' ')}</td><td>${r.telefono || '-'}</td><td style="font-size:0.8rem;">${r.email || '-'}</td><td><span class="badge ${r.metodoPago === 'PSE' ? 'badge-pse' : r.metodoPago === 'TARJETA' ? 'badge-card' : 'badge-daviplata'}">${r.metodoPago}</span></td><td>${formatMoney(r.monto)}</td><td><span class="badge ${badgeState}">${r.estado}</span></td><td style="font-size:0.8rem;">${r.detalleEstado || 'Sin detalle'}</td></tr>`;
-    });
-    html += `</tbody></table>`;
-
-    // Motivos agrupados
-    const motivos = {};
-    noExitosas.forEach(r => {
-        let motivo = r.detalleEstado || 'Sin detalle';
-        if (motivo.includes('monto limit')) motivo = 'Supera monto límite';
-        else if (motivo.includes('no finaliz') || motivo.includes('no acepto')) motivo = 'Usuario no completó transacción';
-        else if (motivo.includes('invalida') || motivo.includes('Tarjeta inv')) motivo = 'Cuenta/Tarjeta inválida';
-        else if (motivo.includes('Fallida')) motivo = 'Transacción fallida';
-        if (!motivos[motivo]) motivos[motivo] = 0;
-        motivos[motivo]++;
-    });
-
-    html += `<h3>Resumen de Motivos de Rechazo</h3><table><thead><tr><th>Motivo</th><th>Ocurrencias</th></tr></thead><tbody>`;
-    Object.keys(motivos).sort((a,b) => motivos[b] - motivos[a]).forEach(m => {
-        html += `<tr><td>${m}</td><td>${motivos[m]}</td></tr>`;
-    });
-    html += `</tbody></table>`;
-
-    // Usuarios con múltiples intentos
-    const intentosPorPlaca = {};
-    noExitosas.forEach(r => {
-        if (!intentosPorPlaca[r.placa]) intentosPorPlaca[r.placa] = { nombre: r.nombre.split(' ').slice(0,4).join(' '), count: 0 };
-        intentosPorPlaca[r.placa].count++;
-    });
-    const multiIntentos = Object.entries(intentosPorPlaca).filter(([,v]) => v.count > 1);
-    if (multiIntentos.length > 0) {
-        html += `<h3>Usuarios con Múltiples Intentos Fallidos</h3><table><thead><tr><th>Placa</th><th>Nombre</th><th>Intentos Fallidos</th><th>Logró pagar?</th></tr></thead><tbody>`;
-        multiIntentos.forEach(([placa, info]) => {
-            const logroPagar = exitosas.some(e => e.placa === placa) ? 'Sí' : 'No';
-            html += `<tr><td>${placa}</td><td>${info.nombre}</td><td>${info.count}</td><td><span class="badge ${logroPagar === 'Sí' ? 'badge-success' : 'badge-danger'}">${logroPagar}</span></td></tr>`;
-        });
-        html += `</tbody></table>`;
+function dlXls(type){
+    var rows,fn;
+    if(type==='si'){
+        fn='ventas-exitosas-soat.xlsx';
+        rows=DATA.exitosas.map(function(r,i){return{'#':i+1,'Fecha':r.fecha,'Fase':r.fase==='AF'?'Amigos y Familia':'Marcha Blanca','Placa':r.placa,'Nombre':r.nombre,'Celular':r.telefono,'Correo':r.email,'Metodo':r.metodoPago,'Banco':r.banco,'Monto':r.monto};});
+    }else{
+        fn='no-exitosas-soat.xlsx';
+        rows=DATA.noExitosas.map(function(r,i){return{'#':i+1,'Fecha':r.fecha,'Placa':r.placa,'Nombre':r.nombre,'Celular':r.telefono,'Correo':r.email,'Metodo':r.metodoPago,'Monto':r.monto,'Estado':r.estado,'Motivo':r.detalleEstado};});
     }
-    html += `</div>`;
-
-    // === DETALLE COMPLETO EXITOSAS ===
-    html += `<div class="section"><div class="section-header"><h2>Detalle Completo — Ventas Exitosas</h2><button class="btn-download" onclick="downloadExcel('exitosas')"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Descargar Excel</button></div><table>
-        <thead><tr><th>#</th><th>Fecha</th><th>Fase</th><th>Placa</th><th>Nombre</th><th>Celular</th><th>Correo</th><th>Método</th><th>Banco</th><th>Monto</th></tr></thead><tbody>`;
-    exitosas.sort((a,b) => (b.fechaParsed||0) - (a.fechaParsed||0)).forEach((r, i) => {
-        const fase = r.fechaParsed < FECHA_CORTE ? '<span class="fase-tag fase-af">A&F</span>' : '<span class="fase-tag fase-mb">MB</span>';
-        html += `<tr><td>${i+1}</td><td>${r.fecha.split(' ')[0]}</td><td>${fase}</td><td><strong>${r.placa}</strong></td><td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;">${r.nombre.split(' ').slice(0,4).join(' ')}</td><td>${r.telefono || '-'}</td><td style="font-size:0.8rem;">${r.email || '-'}</td><td><span class="badge ${r.metodoPago === 'PSE' ? 'badge-pse' : 'badge-card'}">${r.metodoPago}</span></td><td style="font-size:0.8rem;">${r.banco || '-'}</td><td>${formatMoney(r.monto)}</td></tr>`;
-    });
-    html += `</tbody></table></div>`;
-
-    // === PRUEBAS EXCLUIDAS ===
-    if (pruebas.length > 0) {
-        html += `<div class="section"><h2>Transacciones Excluidas (Pruebas Técnicas)</h2><table>
-            <thead><tr><th>Fecha</th><th>Nombre</th><th>Monto</th><th>Razón</th></tr></thead><tbody>`;
-        pruebas.forEach(r => {
-            html += `<tr><td>${r.fecha.split(' ')[0]}</td><td>${r.nombre.split(' ').slice(0,3).join(' ')}</td><td>${formatMoney(r.monto)}</td><td>${!r.placa ? 'Sin placa SOAT' : 'Monto de prueba'}</td></tr>`;
-        });
-        html += `</tbody></table></div>`;
-    }
-
-    // === RENDER ===
-    document.getElementById('reportContent').innerHTML = html;
-    document.getElementById('reportContent').style.display = 'block';
-    document.getElementById('uploadZone').style.display = 'none';
-    document.getElementById('printBtn').style.display = 'block';
-
-    // === GRÁFICOS ===
-    setTimeout(() => {
-        Chart.register(ChartDataLabels);
-
-        // Inyectar comparativo mensual si hay más de 1 mes
-        if (mesesOrdenados.length > 1) {
-            const compContainer = document.getElementById('comparativoMensualContainer');
-            if (compContainer) {
-                compContainer.innerHTML = `<div class="charts-grid">
-                    <div class="chart-container"><h3>Comparativo Mensual - Ventas (Cantidad)</h3><canvas id="chartComparativoCant"></canvas></div>
-                    <div class="chart-container"><h3>Comparativo Mensual - Ventas (Monto)</h3><canvas id="chartComparativoMonto"></canvas></div>
-                </div>`;
-            }
-        }
-
-        // Chart Diario
-        const ctxD = document.getElementById('chartDiario');
-        if (ctxD) {
-            const totalDiario = diasOrdenados.reduce((s, d) => s + ventasDiarias[d].monto, 0);
-            new Chart(ctxD, {
-                type: 'bar',
-                data: {
-                    labels: diasOrdenados.map(d => { const p = d.split('-'); return p[0] + '/' + p[1]; }),
-                    datasets: [{
-                        label: 'Monto diario',
-                        data: diasOrdenados.map(d => ventasDiarias[d].monto),
-                        backgroundColor: '#06b6d4',
-                        borderRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    layout: { padding: { top: 40 } },
-                    plugins: {
-                        legend: { display: false },
-                        datalabels: {
-                            anchor: 'end',
-                            align: 'top',
-                            color: '#475569',
-                            font: { size: 10, weight: 'bold' },
-                            rotation: -90,
-                            formatter: (v) => '$' + (v/1000000).toFixed(1) + 'M'
-                        }
-                    },
-                    scales: {
-                        x: { ticks: { maxRotation: 60, minRotation: 45, font: { size: 11 } } },
-                        y: { beginAtZero: true, ticks: { font: { size: 11 }, callback: v => '$' + (v/1000000).toFixed(1) + 'M' } }
-                    }
-                }
-            });
-        }
-
-        // Chart Método de Pago (barras compactas)
-        const ctxM = document.getElementById('chartMetodo');
-        if (ctxM) {
-            const metodosKeys = Object.keys(metodos);
-            const metodosMontos = metodosKeys.map(m => metodos[m].monto);
-            const metodosTxns = metodosKeys.map(m => metodos[m].txns);
-            const metodosTotal = metodosMontos.reduce((s, v) => s + v, 0);
-            new Chart(ctxM, {
-                type: 'bar',
-                data: {
-                    labels: metodosKeys,
-                    datasets: [{
-                        data: metodosMontos,
-                        backgroundColor: ['#3b82f6', '#a855f7', '#f59e0b', '#10b981'],
-                        borderRadius: 6,
-                        barThickness: 50
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    layout: { padding: { top: 30 } },
-                    plugins: {
-                        legend: { display: false },
-                        datalabels: {
-                            anchor: 'end',
-                            align: 'top',
-                            color: '#1e293b',
-                            font: { size: 11, weight: 'bold' },
-                            formatter: (v, ctx) => {
-                                const pct = ((v / metodosTotal) * 100).toFixed(0);
-                                return '$' + (v/1000000).toFixed(1) + 'M (' + pct + '%)';
-                            }
-                        }
-                    },
-                    scales: {
-                        y: { ticks: { font: { size: 11 }, callback: v => '$' + (v/1000000).toFixed(0) + 'M' }, grid: { color: '#f1f5f9' } },
-                        x: { grid: { display: false }, ticks: { font: { size: 11 } } }
-                    }
-                }
-            });
-        }
-
-        // Chart Semanal
-        const ctxS = document.getElementById('chartSemanal');
-        if (ctxS) {
-            new Chart(ctxS, {
-                type: 'line',
-                data: {
-                    labels: semanasOrdenadas.map(k => { const s = ventasSemanales[k].start; const e = new Date(s); e.setDate(e.getDate()+6); return `${s.getDate()}/${s.getMonth()+1} – ${e.getDate()}/${e.getMonth()+1}`; }),
-                    datasets: [{
-                        label: 'Monto semanal',
-                        data: semanasOrdenadas.map(k => ventasSemanales[k].monto),
-                        borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.1)', fill: true, tension: 0.3, pointRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    layout: { padding: { top: 30, right: 50, bottom: 10 } },
-                    plugins: {
-                        legend: { position: 'bottom', labels: { font: { size: 11 }, usePointStyle: true } },
-                        datalabels: {
-                            anchor: 'end',
-                            align: 'top',
-                            offset: 4,
-                            color: '#1e40af',
-                            font: { size: 9, weight: 'bold' },
-                            formatter: (v) => {
-                                const totalSem = semanasOrdenadas.reduce((s, k) => s + ventasSemanales[k].monto, 0);
-                                const pct = ((v / totalSem) * 100).toFixed(0);
-                                return '$' + (v/1000000).toFixed(1) + 'M (' + pct + '%)';
-                            }
-                        }
-                    },
-                    scales: { y: { ticks: { font: { size: 11 }, callback: v => '$' + (v/1000000).toFixed(1) + 'M' } } }
-                }
-            });
-        }
-
-        // Chart Diario TODOS los estados (apilada)
-        const ctxDT = document.getElementById('chartDiarioTodos');
-        if (ctxDT) {
-            new Chart(ctxDT, {
-                type: 'bar',
-                data: {
-                    labels: diasTodosOrdenados.map(d => { const p = d.split('-'); return p[0] + '/' + p[1]; }),
-                    datasets: [
-                        {
-                            label: 'Aprobadas',
-                            data: diasTodosOrdenados.map(d => txnDiariasTodas[d].APROBADO),
-                            backgroundColor: '#059669',
-                            borderRadius: 3
-                        },
-                        {
-                            label: 'Rechazadas',
-                            data: diasTodosOrdenados.map(d => txnDiariasTodas[d].RECHAZADO),
-                            backgroundColor: '#dc2626',
-                            borderRadius: 3
-                        },
-                        {
-                            label: 'Expiradas',
-                            data: diasTodosOrdenados.map(d => txnDiariasTodas[d].EXPIRADA),
-                            backgroundColor: '#f59e0b',
-                            borderRadius: 3
-                        },
-                        {
-                            label: 'Intentadas',
-                            data: diasTodosOrdenados.map(d => txnDiariasTodas[d].INTENTADO),
-                            backgroundColor: '#94a3b8',
-                            borderRadius: 3
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    layout: { padding: { top: 25 } },
-                    plugins: {
-                        legend: { position: 'top', labels: { font: { size: 13 }, usePointStyle: true, pointStyle: 'rectRounded' } },
-                        datalabels: {
-                            display: function(ctx) {
-                                return ctx.dataset.data[ctx.dataIndex] > 0;
-                            },
-                            anchor: 'center',
-                            align: 'center',
-                            color: '#fff',
-                            font: { size: 11, weight: 'bold' },
-                            formatter: (v) => v
-                        },
-                        tooltip: {
-                            callbacks: {
-                                afterBody: function(tooltipItems) {
-                                    const idx = tooltipItems[0].dataIndex;
-                                    const dia = diasTodosOrdenados[idx];
-                                    const d = txnDiariasTodas[dia];
-                                    const total = d.APROBADO + d.RECHAZADO + d.EXPIRADA + d.INTENTADO;
-                                    return 'Total: ' + total;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        x: { stacked: true, grid: { display: false }, ticks: { maxRotation: 60, minRotation: 45, font: { size: 11 } } },
-                        y: { stacked: true, beginAtZero: true, ticks: { stepSize: 1, font: { size: 11 } }, title: { display: true, text: 'Cantidad de transacciones', font: { size: 12 } } }
-                    }
-                }
-            });
-        }
-
-        // Chart Comparativo Mensual (solo si hay más de 1 mes)
-        if (mesesOrdenados.length > 1) {
-            const mesesNombres = mesesOrdenados.map(k => {
-                const m = ventasMensuales[k];
-                return m.nombre.charAt(0).toUpperCase() + m.nombre.slice(1);
-            });
-            const mesesCantidades = mesesOrdenados.map(k => ventasMensuales[k].txns);
-            const mesesMontos = mesesOrdenados.map(k => ventasMensuales[k].monto);
-            const coloresMeses = ['#6366f1', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#84cc16', '#3b82f6', '#dc2626'];
-
-            // Comparativo Cantidad
-            const ctxCC = document.getElementById('chartComparativoCant');
-            if (ctxCC) {
-                new Chart(ctxCC, {
-                    type: 'bar',
-                    data: {
-                        labels: mesesNombres,
-                        datasets: [{
-                            label: 'Ventas realizadas',
-                            data: mesesCantidades,
-                            backgroundColor: mesesOrdenados.map((_, i) => coloresMeses[i % coloresMeses.length]),
-                            borderRadius: 6
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        layout: { padding: { top: 25 } },
-                        plugins: {
-                            legend: { display: false },
-                            datalabels: {
-                                anchor: 'end',
-                                align: 'top',
-                                color: '#1e293b',
-                                font: { size: 12, weight: 'bold' },
-                                formatter: (v) => v
-                            }
-                        },
-                        scales: {
-                            y: { beginAtZero: true, ticks: { stepSize: 5, font: { size: 11 } }, title: { display: true, text: 'Cantidad de ventas', font: { size: 11 } } },
-                            x: { grid: { display: false }, ticks: { font: { size: 11 } } }
-                        }
-                    }
-                });
-            }
-
-            // Comparativo Monto
-            const ctxCM = document.getElementById('chartComparativoMonto');
-            if (ctxCM) {
-                new Chart(ctxCM, {
-                    type: 'bar',
-                    data: {
-                        labels: mesesNombres,
-                        datasets: [{
-                            label: 'Monto de ventas',
-                            data: mesesMontos,
-                            backgroundColor: mesesOrdenados.map((_, i) => coloresMeses[i % coloresMeses.length]),
-                            borderRadius: 6
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        layout: { padding: { top: 25 } },
-                        plugins: {
-                            legend: { display: false },
-                            datalabels: {
-                                anchor: 'end',
-                                align: 'top',
-                                color: '#1e293b',
-                                font: { size: 12, weight: 'bold' },
-                                formatter: (v) => '$' + (v/1000000).toFixed(1) + 'M'
-                            }
-                        },
-                        scales: {
-                            y: { beginAtZero: true, ticks: { font: { size: 11 }, callback: v => '$' + (v/1000000).toFixed(1) + 'M' }, title: { display: true, text: 'Monto ($)', font: { size: 11 } } },
-                            x: { grid: { display: false }, ticks: { font: { size: 11 } } }
-                        }
-                    }
-                });
-            }
-        }
-
-        // Chart Diario Cantidad
-        const ctxDC = document.getElementById('chartDiarioCant');
-        if (ctxDC) {
-            new Chart(ctxDC, {
-                type: 'bar',
-                data: {
-                    labels: diasOrdenados.map(d => { const p = d.split('-'); return p[0] + '/' + p[1]; }),
-                    datasets: [{
-                        label: 'Transacciones',
-                        data: diasOrdenados.map(d => ventasDiarias[d].txns),
-                        backgroundColor: '#06b6d4',
-                        borderRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    layout: { padding: { top: 20 } },
-                    plugins: {
-                        legend: { display: false },
-                        datalabels: {
-                            anchor: 'end',
-                            align: 'top',
-                            color: '#475569',
-                            font: { size: 11, weight: 'bold' },
-                            formatter: (v) => v
-                        }
-                    },
-                    scales: {
-                        x: { ticks: { maxRotation: 60, minRotation: 45, font: { size: 11 } } },
-                        y: { ticks: { stepSize: 1, font: { size: 11 } } }
-                    }
-                }
-            });
-        }
-
-        // Chart Semanal Cantidad
-        const ctxSC = document.getElementById('chartSemanalCant');
-        if (ctxSC) {
-            new Chart(ctxSC, {
-                type: 'line',
-                data: {
-                    labels: semanasOrdenadas.map(k => { const s = ventasSemanales[k].start; const e = new Date(s); e.setDate(e.getDate()+6); return `${s.getDate()}/${s.getMonth()+1} – ${e.getDate()}/${e.getMonth()+1}`; }),
-                    datasets: [{
-                        label: 'Transacciones semanales',
-                        data: semanasOrdenadas.map(k => ventasSemanales[k].txns),
-                        borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.1)', fill: true, tension: 0.3, pointRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    layout: { padding: { top: 30, right: 50, bottom: 10 } },
-                    plugins: {
-                        legend: { position: 'bottom', labels: { font: { size: 11 }, usePointStyle: true } },
-                        datalabels: {
-                            anchor: 'end',
-                            align: 'top',
-                            offset: 4,
-                            color: '#92400e',
-                            font: { size: 9, weight: 'bold' },
-                            formatter: (v) => {
-                                const totalTxns = semanasOrdenadas.reduce((s, k) => s + ventasSemanales[k].txns, 0);
-                                const pct = ((v / totalTxns) * 100).toFixed(0);
-                                return v + ' (' + pct + '%)';
-                            }
-                        }
-                    },
-                    scales: { y: { ticks: { stepSize: 1, font: { size: 11 } } } }
-                }
-            });
-        }
-
-        // Chart Rechazos (barras horizontales para mejor legibilidad)
-        const ctxR = document.getElementById('chartRechazos');
-        if (ctxR && Object.keys(motivos).length > 0) {
-            const motivosKeys = Object.keys(motivos).sort((a, b) => motivos[b] - motivos[a]);
-            const motivosValues = motivosKeys.map(m => motivos[m]);
-            const motivosTotal = motivosValues.reduce((s, v) => s + v, 0);
-            const colors = ['#ef4444', '#f97316', '#eab308', '#6366f1', '#14b8a6', '#ec4899', '#8b5cf6', '#06b6d4', '#84cc16', '#f43f5e'];
-            new Chart(ctxR, {
-                type: 'bar',
-                data: {
-                    labels: motivosKeys.map(m => m.length > 35 ? m.substring(0, 35) + '...' : m),
-                    datasets: [{
-                        data: motivosValues,
-                        backgroundColor: motivosKeys.map((_, i) => colors[i % colors.length]),
-                        borderRadius: 4
-                    }]
-                },
-                options: {
-                    indexAxis: 'y',
-                    responsive: true,
-                    plugins: {
-                        legend: { display: false },
-                        datalabels: {
-                            anchor: 'end',
-                            align: 'end',
-                            color: '#475569',
-                            font: { size: 11, weight: 'bold' },
-                            formatter: (v) => {
-                                const pct = ((v / motivosTotal) * 100).toFixed(0);
-                                return v + ' (' + pct + '%)';
-                            }
-                        }
-                    },
-                    scales: {
-                        x: { ticks: { stepSize: 1 }, grid: { display: false } },
-                        y: { ticks: { font: { size: 11 } } }
-                    }
-                }
-            });
-        }
-    }, 100);
-}
-
-function downloadExcel(type) {
-    const data = window._reportData;
-    if (!data) return;
-
-    let rows, filename;
-    if (type === 'exitosas') {
-        filename = 'ventas-exitosas-soat.xlsx';
-        rows = data.exitosas
-            .sort((a, b) => (b.fechaParsed || 0) - (a.fechaParsed || 0))
-            .map((r, i) => ({
-                '#': i + 1,
-                'Fecha': r.fecha.split(' ')[0],
-                'Fase': r.fechaParsed < FECHA_CORTE ? 'Amigos y Familia' : 'Marcha Blanca',
-                'Placa': r.placa,
-                'Nombre': r.nombre.split(' ').slice(0, 4).join(' '),
-                'Celular': r.telefono || '',
-                'Correo': r.email || '',
-                'Método de Pago': r.metodoPago,
-                'Banco': r.banco || '',
-                'Monto': r.monto
-            }));
-    } else {
-        filename = 'operaciones-no-exitosas-soat.xlsx';
-        rows = data.noExitosas
-            .sort((a, b) => (b.fechaParsed || 0) - (a.fechaParsed || 0))
-            .map((r, i) => ({
-                '#': i + 1,
-                'Fecha': r.fecha.split(' ')[0],
-                'Placa': r.placa,
-                'Nombre': r.nombre.split(' ').slice(0, 4).join(' '),
-                'Celular': r.telefono || '',
-                'Correo': r.email || '',
-                'Método de Pago': r.metodoPago,
-                'Monto': r.monto,
-                'Estado': r.estado,
-                'Motivo': r.detalleEstado || 'Sin detalle'
-            }));
-    }
-
-    const ws = XLSX.utils.json_to_sheet(rows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, type === 'exitosas' ? 'Exitosas' : 'No Exitosas');
-
-    // Auto-ajustar ancho de columnas
-    const colWidths = Object.keys(rows[0] || {}).map(key => ({
-        wch: Math.max(key.length, ...rows.map(r => String(r[key] || '').length)) + 2
-    }));
-    ws['!cols'] = colWidths;
-
-    XLSX.writeFile(wb, filename);
+    var ws=XLSX.utils.json_to_sheet(rows);
+    var wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,'Datos');
+    XLSX.writeFile(wb,fn);
 }
 </script>
 </body>
