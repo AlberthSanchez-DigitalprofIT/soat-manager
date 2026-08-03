@@ -515,7 +515,7 @@ function generateReport(exitosas, noExitosas, af, mb, pruebas, todas) {
             new Chart(ctxS, {
                 type: 'line',
                 data: {
-                    labels: semanasOrdenadas.map(k => { const s = ventasSemanales[k].start; return `${s.getDate()}/${s.getMonth()+1}`; }),
+                    labels: semanasOrdenadas.map(k => { const s = ventasSemanales[k].start; const e = new Date(s); e.setDate(e.getDate()+6); return `${s.getDate()}/${s.getMonth()+1} – ${e.getDate()}/${e.getMonth()+1}`; }),
                     datasets: [{
                         label: 'Monto semanal',
                         data: semanasOrdenadas.map(k => ventasSemanales[k].monto),
@@ -736,7 +736,7 @@ function generateReport(exitosas, noExitosas, af, mb, pruebas, todas) {
             new Chart(ctxSC, {
                 type: 'line',
                 data: {
-                    labels: semanasOrdenadas.map(k => { const s = ventasSemanales[k].start; return `${s.getDate()}/${s.getMonth()+1}`; }),
+                    labels: semanasOrdenadas.map(k => { const s = ventasSemanales[k].start; const e = new Date(s); e.setDate(e.getDate()+6); return `${s.getDate()}/${s.getMonth()+1} – ${e.getDate()}/${e.getMonth()+1}`; }),
                     datasets: [{
                         label: 'Transacciones semanales',
                         data: semanasOrdenadas.map(k => ventasSemanales[k].txns),
