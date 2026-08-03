@@ -68,7 +68,7 @@
 <body>
     <div class="header">
         <h1>Reporte de Ventas AXA — SOAT Digital (Proyectiva)</h1>
-        <p>Carga el archivo Excel de ePayco para generar el informe automáticamente</p>
+        <p id="headerSubtitle">Carga el archivo Excel de ePayco para generar el informe automáticamente</p>
     </div>
     <div class="container">
         <div class="upload-zone" id="uploadZone">
@@ -84,6 +84,29 @@
 // === CONFIGURACIÓN ===
 const FECHA_CORTE = new Date(2026, 5, 20); // 20 de junio 2026
 const EXCLUIR_MONTOS = [2, 10]; // Montos de pruebas técnicas
+const STORAGE_KEY = 'soat_dashboard_data';
+const STORAGE_DATE_KEY = 'soat_dashboard_date';
+
+// === CARGAR DATOS GUARDADOS AL INICIAR ===
+(function loadSavedData() {
+    var saved = localStorage.getItem(STORAGE_KEY);
+    var savedDate = localStorage.getItem(STORAGE_DATE_KEY);
+    if (saved) {
+        try {
+            var rawData = JSON.parse(saved);
+            document.getElementById('headerSubtitle').innerHTML = 'Ultima actualizacion: <strong>' + savedDate + '</strong> | Arrastra un nuevo Excel para actualizar';
+            document.getElementById('uploadZone').innerHTML = '<h3>Datos cargados (' + savedDate + ')</h3><p>Para actualizar, arrastra un nuevo archivo Excel aqui</p><input type="file" id="fileInput" accept=".xlsx,.xls"><button class="btn" onclick="document.getElementById(\'fileInput\').click()">Cargar nuevo archivo</button>';
+            document.getElementById('uploadZone').style.borderColor = '#059669';
+            document.getElementById('uploadZone').style.background = '#f0fdf4';
+            // Re-attach event listener
+            setTimeout(function() {
+                var fi = document.getElementById('fileInput');
+                if (fi) fi.addEventListener('change', function(e) { handleFile(e.target.files[0]); });
+            }, 100);
+            processData(rawData);
+        } catch(e) { console.error('Error cargando datos guardados:', e); }
+    }
+})();
 
 // === EVENT LISTENERS ===
 const uploadZone = document.getElementById('uploadZone');
@@ -101,6 +124,11 @@ function handleFile(file) {
         const workbook = XLSX.read(e.target.result, { type: 'array' });
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
         const data = XLSX.utils.sheet_to_json(sheet);
+        // Guardar datos en localStorage para persistencia
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            localStorage.setItem(STORAGE_DATE_KEY, new Date().toLocaleString('es-CO'));
+        } catch(err) { console.warn('No se pudo guardar en localStorage:', err); }
         processData(data);
     };
     reader.readAsArrayBuffer(file);
