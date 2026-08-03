@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subir Reporte ePayco — SOAT Digital</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f5f7fa; color: #1a1a2e; line-height: 1.6; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; }
+        .container { max-width: 600px; width: 100%; }
+        .header { text-align: center; margin-bottom: 2rem; }
+        .header h1 { font-size: 1.6rem; color: #1a1a2e; margin-bottom: 0.5rem; }
+        .header p { color: #64748b; font-size: 0.95rem; }
+        .card { background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 1.5rem; }
+        .field { margin-bottom: 1.5rem; }
+        .field label { display: block; font-weight: 600; color: #475569; margin-bottom: 0.5rem; font-size: 0.9rem; }
+        .field input[type="password"] { width: 100%; padding: 0.7rem 1rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem; }
+        .field input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+        .field small { display: block; margin-top: 0.3rem; color: #94a3b8; font-size: 0.8rem; }
+        .upload-zone { border: 2px dashed #cbd5e1; border-radius: 12px; padding: 2.5rem; text-align: center; cursor: pointer; transition: all 0.3s; }
+        .upload-zone:hover { border-color: #3b82f6; background: #f8fafc; }
+        .upload-zone.dragover { border-color: #3b82f6; background: #eff6ff; }
+        .upload-zone.has-file { border-color: #059669; background: #f0fdf4; }
+        .upload-zone h3 { color: #475569; margin-bottom: 0.5rem; font-size: 1rem; }
+        .upload-zone p { color: #94a3b8; font-size: 0.85rem; }
+        .upload-zone .file-name { color: #059669; font-weight: 600; margin-top: 0.5rem; }
+        .upload-zone input { display: none; }
+        .btn { display: block; width: 100%; background: #3b82f6; color: white; border: none; padding: 0.9rem; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: 600; margin-top: 1.5rem; transition: background 0.2s; }
+        .btn:hover { background: #2563eb; }
+        .btn:disabled { background: #94a3b8; cursor: not-allowed; }
+        .progress { display: none; margin-top: 1.5rem; }
+        .progress .step { display: flex; align-items: center; gap: 0.7rem; padding: 0.6rem 0; font-size: 0.9rem; color: #64748b; }
+        .progress .step.active { color: #3b82f6; font-weight: 600; }
+        .progress .step.done { color: #059669; }
+        .progress .step.error { color: #dc2626; }
+        .progress .step .icon { width: 20px; text-align: center; }
+        .message { margin-top: 1.5rem; padding: 1rem; border-radius: 8px; font-size: 0.9rem; display: none; }
+        .message.success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; display: block; }
+        .message.error { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; display: block; }
+        .message a { color: inherit; font-weight: 600; }
+        .info-box { background: #fffbeb; border: 1px solid #fef3c7; border-radius: 8px; padding: 1rem; margin-top: 1rem; font-size: 0.85rem; color: #92400e; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Actualizar Dashboard Ventas AXA SOAT</h1>
+            <p>Sube el archivo Excel de ePayco para regenerar el informe</p>
+        </div>
+
+        <div class="card">
+            <div class="field">
+                <label for="token">Token de GitHub</label>
+                <input type="password" id="token" placeholder="ghp_xxxxxxxxxxxx">
+                <small>Personal Access Token con scope <code>repo</code> o <code>contents:write</code></small>
+            </div>
+
+            <div class="field">
+                <label>Archivo Excel (.xlsx)</label>
+                <div class="upload-zone" id="uploadZone">
+                    <h3>Arrastra el archivo aqui o haz clic</h3>
+                    <p>Formato esperado: reporte ePayco (.xlsx)</p>
+                    <div class="file-name" id="fileName" style="display:none;"></div>
+                    <input type="file" id="fileInput" accept=".xlsx,.xls">
+                </div>
+            </div>
+
+            <button class="btn" id="btnUpload" disabled>Actualizar Dashboard</button>
+
+            <div class="progress" id="progress">
+                <div class="step" id="step1"><span class="icon">&#9675;</span> Leyendo archivo...</div>
+                <div class="step" id="step2"><span class="icon">&#9675;</span> Validando columnas...</div>
+                <div class="step" id="step3"><span class="icon">&#9675;</span> Subiendo a GitHub...</div>
+                <div class="step" id="step4"><span class="icon">&#9675;</span> Disparando regeneracion...</div>
+            </div>
+
+            <div class="message" id="message"></div>
+
+            <div class="info-box">
+                <strong>Nota:</strong> Despues de subir, GitHub Actions regenerara el dashboard automaticamente en ~3-5 minutos.
+                El dashboard estara disponible en: <a href="https://alberthsanchez-digitalproit.github.io/soat-manager/" target="_blank">alberthsanchez-digitalproit.github.io/soat-manager</a>
+            </div>
+        </div>
+    </div>
+
+<script>
+// === CONFIGURACION DEL REPO ===
+var REPO_OWNER = 'AlberthSanchez-DigitalprofIT';
+var REPO_NAME = 'soat-manager';
+var FILE_PATH = 'data/epayco-report.xlsx';
+var BRANCH = 'main';
+var WORKFLOW_FILE = 'regenerate-dashboards.yml';
+var REQUIRED_COLUMNS = [
+    'Referencia De Pago', 'email', 'Documento', 'Nombre',
+    'Fecha', 'Mes', 'Método De Pago', 'Monto', 'Estado',
+    'Detalle De estado', 'Banco', 'Descripción'
+];
+
+// === STATE ===
+var selectedFile = null;
+var fileContent = null;
+
+// === DOM ===
+var uploadZone = document.getElementById('uploadZone');
+var fileInput = document.getElementById('fileInput');
+var btnUpload = document.getElementById('btnUpload');
+var progress = document.getElementById('progress');
+var message = document.getElementById('message');
+var fileNameEl = document.getElementById('fileName');
+
+// === EVENTS ===
+uploadZone.addEventListener('click', function() { fileInput.click(); });
+uploadZone.addEventListener('dragover', function(e) { e.preventDefault(); uploadZone.classList.add('dragover'); });
+uploadZone.addEventListener('dragleave', function() { uploadZone.classList.remove('dragover'); });
+uploadZone.addEventListener('drop', function(e) {
+    e.preventDefault();
+    uploadZone.classList.remove('dragover');
+    handleFileSelect(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', function(e) { handleFileSelect(e.target.files[0]); });
+btnUpload.addEventListener('click', startUpload);
+
+function handleFileSelect(file) {
+    if (!file) return;
+    var ext = file.name.split('.').pop().toLowerCase();
+    if (ext !== 'xlsx' && ext !== 'xls') {
+        showMessage('error', 'Solo se aceptan archivos .xlsx o .xls');
+        return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+        showMessage('error', 'El archivo supera 10 MB');
+        return;
+    }
+    selectedFile = file;
+    uploadZone.classList.add('has-file');
+    fileNameEl.textContent = file.name + ' (' + (file.size / 1024).toFixed(0) + ' KB)';
+    fileNameEl.style.display = 'block';
+    btnUpload.disabled = false;
+    hideMessage();
+}
+
+function startUpload() {
+    var token = document.getElementById('token').value.trim();
+    if (!token) {
+        showMessage('error', 'Ingresa tu token de GitHub');
+        return;
+    }
+    if (!selectedFile) {
+        showMessage('error', 'Selecciona un archivo');
+        return;
+    }
+
+    btnUpload.disabled = true;
+    progress.style.display = 'block';
+    hideMessage();
+
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        fileContent = e.target.result;
+        setStep(1, 'done');
+
+        // Validar columnas con xlsx (cargado via CDN en memoria)
+        try {
+            var script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+            script.onload = function() {
+                validateAndUpload(token);
+            };
+            if (typeof XLSX !== 'undefined') {
+                validateAndUpload(token);
+            } else {
+                document.head.appendChild(script);
+            }
+        } catch (err) {
+            setStep(2, 'error');
+            showMessage('error', 'Error validando archivo: ' + err.message);
+            btnUpload.disabled = false;
+        }
+    };
+    reader.readAsArrayBuffer(selectedFile);
+    setStep(1, 'active');
+}
+
+function validateAndUpload(token) {
+    setStep(2, 'active');
+    try {
+        var workbook = XLSX.read(fileContent, { type: 'array' });
+        var sheet = workbook.Sheets[workbook.SheetNames[0]];
+        var headers = [];
+        var range = XLSX.utils.decode_range(sheet['!ref']);
+        for (var c = range.s.c; c <= range.e.c; c++) {
+            var cell = sheet[XLSX.utils.encode_cell({ r: range.s.r, c: c })];
+            if (cell) headers.push(cell.v);
+        }
+
+        var missing = REQUIRED_COLUMNS.filter(function(col) {
+            return headers.indexOf(col) === -1;
+        });
+
+        if (missing.length > 0) {
+            setStep(2, 'error');
+            showMessage('error', 'Columnas faltantes: ' + missing.join(', '));
+            btnUpload.disabled = false;
+            return;
+        }
+
+        setStep(2, 'done');
+        uploadToGitHub(token);
+    } catch (err) {
+        setStep(2, 'error');
+        showMessage('error', 'Error leyendo Excel: ' + err.message);
+        btnUpload.disabled = false;
+    }
+}
+
+function uploadToGitHub(token) {
+    setStep(3, 'active');
+    var base64Content = arrayBufferToBase64(fileContent);
+
+    // Obtener SHA del archivo existente (si existe)
+    fetch('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/contents/' + FILE_PATH + '?ref=' + BRANCH, {
+        headers: {
+            'Authorization': 'Bearer ' + token,
+            'Accept': 'application/vnd.github.v3+json'
+        }
+    })
+    .then(function(res) {
+        if (res.status === 200) return res.json();
+        return null;
+    })
+    .then(function(existing) {
+        var body = {
+            message: 'data: actualizar reporte ePayco (' + selectedFile.name + ')',
+            content: base64Content,
+            branch: BRANCH
+        };
+        if (existing && existing.sha) {
+            body.sha = existing.sha;
+        }
+
+        return fetch('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/contents/' + FILE_PATH, {
+            method: 'PUT',
+            headers: {
+                'Authorization': 'Bearer ' + token,
+                'Content-Type': 'application/json',
+                'Accept': 'application/vnd.github.v3+json'
+            },
+            body: JSON.stringify(body)
+        });
+    })
+    .then(function(res) {
+        if (!res.ok) throw new Error('Error subiendo archivo: HTTP ' + res.status);
+        setStep(3, 'done');
+        return triggerWorkflow(token);
+    })
+    .catch(function(err) {
+        setStep(3, 'error');
+        showMessage('error', err.message);
+        btnUpload.disabled = false;
+    });
+}
+
+function triggerWorkflow(token) {
+    setStep(4, 'active');
+
+    fetch('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/actions/workflows/' + WORKFLOW_FILE + '/dispatches', {
+        method: 'POST',
+        headers: {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json',
+            'Accept': 'application/vnd.github.v3+json'
+        },
+        body: JSON.stringify({ ref: BRANCH })
+    })
+    .then(function(res) {
+        if (res.status === 204 || res.ok) {
+            setStep(4, 'done');
+            showMessage('success',
+                'Archivo subido correctamente. El dashboard se regenerara en ~3-5 minutos.<br>' +
+                '<a href="https://github.com/' + REPO_OWNER + '/' + REPO_NAME + '/actions" target="_blank">Ver progreso del workflow</a> | ' +
+                '<a href="https://alberthsanchez-digitalproit.github.io/soat-manager/" target="_blank">Ver dashboard</a>'
+            );
+        } else {
+            // El push ya dispara el workflow automaticamente, asi que no es critico
+            setStep(4, 'done');
+            showMessage('success',
+                'Archivo subido. El workflow se disparara automaticamente por el push.<br>' +
+                '<a href="https://github.com/' + REPO_OWNER + '/' + REPO_NAME + '/actions" target="_blank">Ver progreso</a>'
+            );
+        }
+    })
+    .catch(function() {
+        setStep(4, 'done');
+        showMessage('success',
+            'Archivo subido. El workflow se disparara automaticamente por el push.<br>' +
+            '<a href="https://github.com/' + REPO_OWNER + '/' + REPO_NAME + '/actions" target="_blank">Ver progreso</a>'
+        );
+    });
+}
+
+// === HELPERS ===
+function setStep(num, state) {
+    var el = document.getElementById('step' + num);
+    el.className = 'step ' + state;
+    var icon = state === 'done' ? '&#9989;' : state === 'error' ? '&#10060;' : state === 'active' ? '&#9203;' : '&#9675;';
+    el.querySelector('.icon').innerHTML = icon;
+}
+
+function showMessage(type, html) {
+    message.className = 'message ' + type;
+    message.innerHTML = html;
+    message.style.display = 'block';
+}
+
+function hideMessage() {
+    message.style.display = 'none';
+}
+
+function arrayBufferToBase64(buffer) {
+    var bytes = new Uint8Array(buffer);
+    var binary = '';
+    for (var i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
+}
+</script>
+</body>
+</html>
